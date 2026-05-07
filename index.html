@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OARS · Hours Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg:      #080d14;
+  --surface: #0d1520;
+  --card:    #111d2e;
+  --card2:   #152236;
+  --border:  #1e3050;
+  --border2: #264070;
+  --cyan:    #00d4ff;
+  --cyan2:   #00a8cc;
+  --cyan-dim:rgba(0,212,255,.12);
+  --cyan-glo:rgba(0,212,255,.25);
+  --sky:     #7dd3fc;
+  --text:    #e2eaf4;
+  --text2:   #94a8c0;
+  --text3:   #5a7490;
+  --danger:  #f87171;
+  --warn:    #fbbf24;
+  --green:   #34d399;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  font-size:16px;
+  min-height:100vh;
+  padding:28px 24px 80px;
+}
+
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;z-index:0;
+}
+
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;}
+
+/* Header */
+header{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  flex-wrap:wrap;gap:16px;
+  margin-bottom:32px;padding-bottom:20px;
+  border-bottom:1px solid var(--border);
+}
+
+.logo h1{
+  font-family:'Share Tech Mono',monospace;
+  font-size:24px;color:var(--cyan);letter-spacing:3px;
+  text-shadow:0 0 24px var(--cyan-glo);
+}
+.logo p{font-size:13px;color:var(--text3);letter-spacing:1.5px;margin-top:4px;text-transform:uppercase;}
+
+.lib-block{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:14px 20px;min-width:230px;
+}
+.lib-row{display:flex;justify-content:space-between;gap:16px;font-size:14px;color:var(--text3);line-height:2.1;}
+.lib-val{font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--cyan);}
+
+/* Section label */
+.slbl{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;padding-left:2px;}
+
+/* Import panel */
+.import-panel{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:22px 24px;margin-bottom:22px;
+}
+.import-panel h2{font-size:16px;font-weight:600;color:var(--text);margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+.import-panel h2 span{
+  font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);
+  border:1px solid var(--border2);border-radius:4px;padding:2px 8px;letter-spacing:1px;
+}
+.import-row{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;}
+
+.field{display:flex;flex-direction:column;gap:7px;}
+.field label{font-size:13px;color:var(--text2);letter-spacing:.3px;font-weight:500;}
+
+input[type="date"],input[type="number"],select{
+  background:var(--surface);border:1px solid var(--border2);border-radius:8px;
+  color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;
+  padding:10px 14px;outline:none;transition:border-color .2s,box-shadow .2s;
+  -webkit-appearance:none;appearance:none;
+}
+input[type="date"]:focus,input[type="number"]:focus,select:focus{
+  border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,212,255,.1);
+}
+input[type="date"]{width:160px;color-scheme:dark;}
+input[type="number"]{width:120px;}
+
+.btn{
+  font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;
+  padding:10px 22px;border-radius:8px;border:none;cursor:pointer;
+  transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;
+}
+.btn-primary{background:var(--cyan);color:#060c14;}
+.btn-primary:hover{background:#33ddff;box-shadow:0 0 18px var(--cyan-glo);}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2);}
+.btn-ghost:hover{border-color:var(--cyan);color:var(--cyan);}
+.btn-danger{background:transparent;color:var(--danger);border:1px solid rgba(248,113,113,.35);}
+.btn-danger:hover{background:rgba(248,113,113,.08);}
+.btn-sm{font-size:14px;padding:8px 16px;}
+#fileInput{display:none;}
+
+/* Budget row */
+.budget-row{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:20px 24px;margin-bottom:24px;
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+}
+.bar-wrap{flex:1;min-width:220px;}
+.bar-meta{display:flex;justify-content:space-between;font-size:14px;color:var(--text3);margin-bottom:8px;}
+.bar-meta .spent{color:var(--cyan);font-weight:600;}
+.bar-meta .alloc{color:var(--sky);}
+.bar-track{background:var(--surface);border-radius:6px;height:13px;overflow:hidden;border:1px solid var(--border);}
+.bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--cyan2),var(--cyan));transition:width .6s,background .3s;box-shadow:0 0 10px rgba(0,212,255,.3);}
+.bar-fill.bwarn{background:linear-gradient(90deg,#d97706,var(--warn));box-shadow:0 0 10px rgba(251,191,36,.3);}
+.bar-fill.bdang{background:linear-gradient(90deg,#dc2626,var(--danger));box-shadow:0 0 10px rgba(248,113,113,.3);}
+.bar-pct{font-family:'Share Tech Mono',monospace;font-size:24px;color:var(--cyan);min-width:68px;text-align:right;}
+.bar-pct.bwarn{color:var(--warn);}
+.bar-pct.bdang{color:var(--danger);}
+
+/* Cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:28px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 22px;position:relative;overflow:hidden;transition:border-color .2s;}
+.card:hover{border-color:var(--border2);}
+.card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
+.card.cc::after{background:var(--cyan);box-shadow:0 0 10px var(--cyan-glo);}
+.card.cs::after{background:var(--sky);}
+.card.cg::after{background:var(--green);}
+.card.cw::after{background:var(--warn);}
+.card.cm::after{background:var(--border2);}
+.card-lbl{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;font-weight:500;}
+.card-val{font-family:'Share Tech Mono',monospace;font-size:28px;line-height:1;}
+.card.cc .card-val{color:var(--cyan);}
+.card.cs .card-val{color:var(--sky);}
+.card.cg .card-val{color:var(--green);}
+.card.cw .card-val{color:var(--warn);}
+.card-sub{font-size:14px;color:var(--text3);margin-top:7px;}
+
+/* Tables shared */
+.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.tbl-head{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.tbl-title{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);font-weight:500;}
+table{width:100%;border-collapse:collapse;}
+thead th{background:var(--surface);font-size:13px;letter-spacing:.8px;text-transform:uppercase;color:var(--text2);padding:13px 22px;text-align:left;font-weight:600;border-bottom:1px solid var(--border);}
+thead th.r{text-align:right;}
+tbody tr{border-bottom:1px solid var(--border);transition:background .15s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:rgba(0,212,255,.025);}
+tbody td{padding:15px 22px;font-size:15px;color:var(--text);}
+tbody td.r{text-align:right;font-family:'Share Tech Mono',monospace;font-size:15px;}
+tfoot td{padding:15px 22px;font-size:15px;font-weight:700;border-top:2px solid var(--border2);}
+tfoot td.r{text-align:right;font-family:'Share Tech Mono',monospace;}
+
+/* Monthly */
+.mlbl{font-weight:600;font-size:15px;}
+.mrange{font-size:13px;color:var(--text3);margin-top:3px;}
+.cumbar-wrap{display:flex;align-items:center;gap:10px;}
+.cumbar-track{background:var(--surface);border-radius:3px;height:7px;width:80px;overflow:hidden;border:1px solid var(--border);}
+.cumbar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--cyan2),var(--cyan));transition:width .4s;}
+
+/* Worker table */
+.role-badge{
+  display:inline-block;font-size:12px;letter-spacing:.5px;
+  padding:3px 11px;border-radius:20px;margin-left:10px;
+  font-weight:700;vertical-align:middle;cursor:pointer;transition:all .2s;text-transform:uppercase;
+}
+.btc  {background:rgba(0,212,255,.1); color:var(--cyan); border:1px solid rgba(0,212,255,.3);}
+.bsc  {background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.3);}
+.bboth{background:rgba(251,191,36,.1);color:var(--warn); border:1px solid rgba(251,191,36,.3);}
+.bnone{background:rgba(90,116,144,.1);color:var(--text3);border:1px solid rgba(90,116,144,.25);}
+.btc:hover  {background:rgba(0,212,255,.2);}
+.bsc:hover  {background:rgba(52,211,153,.2);}
+.bboth:hover{background:rgba(251,191,36,.2);}
+.bnone:hover{background:rgba(90,116,144,.2);}
+
+.mb-wrap{display:flex;align-items:center;gap:10px;}
+.mb-track{background:var(--surface);border-radius:3px;height:6px;width:80px;overflow:hidden;border:1px solid var(--border);}
+.mb-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--cyan2),var(--cyan));}
+.vhrs{color:var(--sky);}
+.vcost{color:var(--cyan);}
+
+/* Toolbar */
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.tr-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.sw{position:relative;}
+.sw::after{content:'▾';position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none;font-size:12px;}
+select{padding-right:32px;}
+
+/* Legend */
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:18px;font-size:14px;color:var(--text3);}
+.leg{display:flex;align-items:center;gap:7px;}
+.ldot{width:10px;height:10px;border-radius:50%;}
+
+/* Empty */
+.empty{text-align:center;padding:60px 20px;color:var(--text3);}
+.empty-icon{font-size:44px;margin-bottom:14px;opacity:.4;}
+.empty p{font-size:15px;line-height:1.7;}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s;}
+.overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--card2);border:1px solid var(--border2);border-radius:16px;padding:30px;width:90%;max-width:400px;box-shadow:0 24px 80px rgba(0,0,0,.9);}
+.modal h3{font-size:18px;color:var(--text);margin-bottom:5px;}
+.modal .msub{font-size:14px;color:var(--text3);margin-bottom:22px;}
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;}
+.ropt{padding:16px 12px;border-radius:10px;border:2px solid var(--border);cursor:pointer;text-align:center;transition:all .2s;}
+.ropt:hover{border-color:var(--cyan2);}
+.ropt.sel{border-color:var(--cyan);background:rgba(0,212,255,.06);}
+.ropt-icon{font-size:24px;margin-bottom:6px;}
+.ropt-lbl{font-size:14px;font-weight:600;color:var(--text);}
+.ropt-sub{font-size:12px;color:var(--text3);margin-top:3px;}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card2);border:1px solid var(--cyan);border-radius:10px;padding:13px 20px;font-size:14px;color:var(--cyan);font-family:'Share Tech Mono',monospace;box-shadow:0 4px 24px rgba(0,0,0,.7);transform:translateY(80px);opacity:0;transition:all .3s;z-index:1001;max-width:300px;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+@media(max-width:640px){
+  .cards{grid-template-columns:1fr 1fr;}
+  .tr-right{margin-left:0;width:100%;}
+  .import-row{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="logo">
+    <h1>OARS · HOURS TRACKER</h1>
+    <p>High Point University &nbsp;·&nbsp; Accessibility Resources &amp; Services</p>
+  </div>
+  <div class="lib-block">
+    <div class="lib-row"><span>Last Import</span><span class="lib-val" id="libDate">—</span></div>
+    <div class="lib-row"><span>Prev Total Hrs</span><span class="lib-val" id="libHrs">—</span></div>
+    <div class="lib-row"><span>Prev Total Cost</span><span class="lib-val" id="libCost">—</span></div>
+  </div>
+</header>
+
+<!-- Import -->
+<div class="import-panel">
+  <h2>Import Workday Export <span>EXCEL .xlsx</span></h2>
+  <div class="import-row">
+    <div class="field">
+      <label>Start Date</label>
+      <input type="date" id="startDate">
+    </div>
+    <div class="field">
+      <label>End Date</label>
+      <input type="date" id="endDate">
+    </div>
+    <div class="field">
+      <label>Month</label>
+      <div class="sw">
+        <select id="monthLabel">
+          <option value="September">September</option>
+          <option value="October">October</option>
+          <option value="November">November</option>
+          <option value="December">December</option>
+          <option value="January">January</option>
+          <option value="February">February</option>
+          <option value="March">March</option>
+          <option value="April">April</option>
+          <option value="May">May</option>
+          <option value="Custom">Custom</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">⬆&nbsp;Import Excel</button>
+    <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFile(event)">
+  </div>
+</div>
+
+<!-- Budget -->
+<div class="budget-row">
+  <div class="field">
+    <label style="font-size:13px;color:var(--text2);font-weight:500;">Semester Budget</label>
+    <input type="number" id="budgetInput" value="5818" min="0" step="100">
+  </div>
+  <div class="bar-wrap">
+    <div class="bar-meta">
+      <span class="spent">SPENT: <span id="spentLbl">$0.00</span></span>
+      <span class="alloc">BUDGET: <span id="budgetLbl">$5,818</span></span>
+    </div>
+    <div class="bar-track"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
+  </div>
+  <div class="bar-pct" id="barPct">0%</div>
+  <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export</button>
+  <button class="btn btn-danger btn-sm" onclick="clearAll()">✕ Clear All</button>
+</div>
+
+<!-- Cards -->
+<div class="slbl">Summary</div>
+<div class="cards">
+  <div class="card cc"><div class="card-lbl">Total Hours</div><div class="card-val" id="cTotH">0.00</div><div class="card-sub" id="cTotSub">all workers</div></div>
+  <div class="card cs"><div class="card-lbl">Total Cost</div><div class="card-val" id="cTotC">$0.00</div><div class="card-sub">@ $10 / hr</div></div>
+  <div class="card cc"><div class="card-lbl">Testing Center Hrs</div><div class="card-val" id="cTCH">0.00</div><div class="card-sub" id="cTCC">$0.00</div></div>
+  <div class="card cg"><div class="card-lbl">Scribe Hrs</div><div class="card-val" id="cSCH">0.00</div><div class="card-sub" id="cSCC">$0.00</div></div>
+  <div class="card cw"><div class="card-lbl">Both Roles Hrs</div><div class="card-val" id="cBH">0.00</div><div class="card-sub" id="cBSub">split not determinable</div></div>
+  <div class="card cm"><div class="card-lbl">Workers</div><div class="card-val" id="cWrk">0</div><div class="card-sub" id="cWrkSub">imported</div></div>
+</div>
+
+<!-- Monthly -->
+<div class="slbl">Monthly Running Total</div>
+<div class="tbl-wrap" style="margin-bottom:24px;">
+  <div class="tbl-head">
+    <div class="tbl-title">Hours &amp; Cost by Period — Cumulative</div>
+    <button class="btn btn-danger btn-sm" id="deleteMonthBtn" style="display:none" onclick="deleteSelectedMonth()">✕ Remove Selected Month</button>
+  </div>
+  <div id="monthlyTable"><div class="empty"><div class="empty-icon">📅</div><p>No data yet. Import your first Workday export above.</p></div></div>
+</div>
+
+<!-- Worker detail -->
+<div class="slbl" style="margin-top:24px;">Worker Detail</div>
+<div class="toolbar">
+  <div class="legend">
+    <div class="leg"><div class="ldot" style="background:var(--cyan)"></div>Testing Center</div>
+    <div class="leg"><div class="ldot" style="background:var(--green)"></div>Scribe</div>
+    <div class="leg"><div class="ldot" style="background:var(--warn)"></div>Both</div>
+    <div class="leg"><div class="ldot" style="background:var(--text3)"></div>Unassigned</div>
+    <div class="leg" style="font-style:italic;font-size:13px">· Click badge to assign</div>
+  </div>
+  <div class="tr-right">
+    <label style="font-size:14px;color:var(--text3)">Filter:</label>
+    <div class="sw"><select id="roleFilter" onchange="render()">
+      <option value="all">All Workers</option>
+      <option value="TC">Testing Center</option>
+      <option value="SC">Scribe</option>
+      <option value="BOTH">Both</option>
+      <option value="NONE">Unassigned</option>
+    </select></div>
+  </div>
+</div>
+
+<div class="tbl-wrap">
+  <div class="tbl-head">
+    <div class="tbl-title">Worker Breakdown — Most Recent Import</div>
+    <div style="font-size:13px;color:var(--text3)">Click a badge to assign role</div>
+  </div>
+  <div id="workerTable"><div class="empty"><div class="empty-icon">👤</div><p>No workers imported yet.</p></div></div>
+</div>
+
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <h3 id="modalName">Assign Role</h3>
+    <div class="msub">Select the area this student worker covers:</div>
+    <div class="role-grid">
+      <div class="ropt" id="ro-TC"   onclick="pickRole('TC')">  <div class="ropt-icon">🖥️</div><div class="ropt-lbl">Testing Center</div><div class="ropt-sub">TC shifts only</div></div>
+      <div class="ropt" id="ro-SC"   onclick="pickRole('SC')">  <div class="ropt-icon">✏️</div> <div class="ropt-lbl">Scribe</div>         <div class="ropt-sub">Scribe assignments</div></div>
+      <div class="ropt" id="ro-BOTH" onclick="pickRole('BOTH')"><div class="ropt-icon">⚡</div> <div class="ropt-lbl">Both</div>           <div class="ropt-sub">TC + Scribe</div></div>
+      <div class="ropt" id="ro-NONE" onclick="pickRole('NONE')"><div class="ropt-icon">❓</div> <div class="ropt-lbl">Unassigned</div>     <div class="ropt-sub">Not yet set</div></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="confirmRole()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const KEY = 'oars_tracker_v2';
+let S = { months:[], roles:{}, budget:5818, prevSnapshot:null };
+let _mw=null,_pr=null,_selMonth=null;
+
+function load(){try{const r=localStorage.getItem(KEY);if(r)S={...S,...JSON.parse(r)};}catch(e){}}
+function save(){localStorage.setItem(KEY,JSON.stringify(S));}
+
+function handleFile(e){
+  const file=e.target.files[0];if(!file)return;
+  const start=document.getElementById('startDate').value;
+  const end=document.getElementById('endDate').value;
+  const ml=document.getElementById('monthLabel').value;
+  if(!start||!end){showToast('⚠ Set start and end date first');e.target.value='';return;}
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1});
+      const workers=[];let found=false;
+      for(const row of rows){
+        if(!found){
+          const l=row.map(c=>String(c||'').toLowerCase());
+          if(l.some(c=>c.includes('worker'))&&l.some(c=>c.includes('hour'))){found=true;continue;}
+        }else{
+          const name=String(row[0]||'').trim();
+          const hrs=parseFloat(row[1]);
+          if(name&&!isNaN(hrs)&&name.toLowerCase()!=='total')workers.push({name,hours:hrs});
+        }
+      }
+      if(!workers.length){showToast('⚠ No worker rows found');e.target.value='';return;}
+      // snapshot
+      const all=S.months.flatMap(m=>m.workers);
+      if(all.length){const th=all.reduce((s,w)=>s+w.hours,0);S.prevSnapshot={totalHrs:th,totalCost:th*10};}
+      // add/replace
+      const idx=S.months.findIndex(m=>m.label===ml&&m.startDate===start);
+      const entry={label:ml,startDate:start,endDate:end,workers,importedAt:new Date().toISOString()};
+      if(idx>=0)S.months[idx]=entry;else S.months.push(entry);
+      S.months.sort((a,b)=>a.startDate.localeCompare(b.startDate));
+      workers.forEach(w=>{if(!S.roles[w.name])S.roles[w.name]='NONE';});
+      save();render();showToast('✓ Imported '+workers.length+' workers for '+ml);
+    }catch(err){showToast('⚠ Error: '+err.message);}
+    e.target.value='';
+  };
+  reader.readAsBinaryString(file);
+}
+
+function render(){
+  renderLib();renderBudget();renderCards();renderMonthly();renderWorkers();
+}
+
+function renderLib(){
+  const latest=[...S.months].sort((a,b)=>b.importedAt.localeCompare(a.importedAt))[0];
+  if(latest){
+    const d=new Date(latest.importedAt);
+    document.getElementById('libDate').textContent=
+      d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' '+
+      d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  }
+  if(S.prevSnapshot){
+    document.getElementById('libHrs').textContent=S.prevSnapshot.totalHrs.toFixed(2)+' hrs';
+    document.getElementById('libCost').textContent='$'+fmt(S.prevSnapshot.totalCost);
+  }
+}
+
+function allWorkers(){
+  const map={};
+  S.months.forEach(m=>m.workers.forEach(w=>{map[w.name]=(map[w.name]||0)+w.hours;}));
+  return Object.entries(map).map(([name,hours])=>({name,hours}));
+}
+
+function latestWorkers(){
+  if(!S.months.length)return[];
+  return [...S.months].sort((a,b)=>b.importedAt.localeCompare(a.importedAt))[0].workers;
+}
+
+function renderBudget(){
+  const budget=parseFloat(document.getElementById('budgetInput').value)||0;
+  S.budget=budget;
+  const tot=allWorkers().reduce((s,w)=>s+w.hours,0)*10;
+  const pct=budget>0?(tot/budget)*100:0;
+  const disp=Math.min(pct,100);
+  const fill=document.getElementById('barFill');
+  const pctEl=document.getElementById('barPct');
+  fill.style.width=disp+'%';
+  fill.className='bar-fill'+(pct>=100?' bdang':pct>=75?' bwarn':'');
+  pctEl.textContent=Math.round(pct)+'%';
+  pctEl.className='bar-pct'+(pct>=100?' bdang':pct>=75?' bwarn':'');
+  document.getElementById('spentLbl').textContent='$'+fmt(tot);
+  document.getElementById('budgetLbl').textContent='$'+budget.toLocaleString('en-US');
+}
+
+function renderCards(){
+  const filter=document.getElementById('roleFilter').value;
+  const workers=allWorkers();
+  const filtered=filter==='all'?workers:workers.filter(w=>(S.roles[w.name]||'NONE')===filter);
+  const totH=filtered.reduce((s,w)=>s+w.hours,0);
+  const tcH=workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+  const scH=workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+  const btH=workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
+  const btC=workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').length;
+  s('cTotH',totH.toFixed(2));s('cTotC','$'+fmt(totH*10));
+  s('cTotSub',filter==='all'?'all workers':filter+' workers');
+  s('cWrk',filtered.length);s('cWrkSub',filter==='all'?'total':'matching filter');
+  s('cTCH',tcH.toFixed(2));s('cTCC','$'+fmt(tcH*10));
+  s('cSCH',scH.toFixed(2));s('cSCC','$'+fmt(scH*10));
+  s('cBH',btH.toFixed(2));s('cBSub',btC+' worker'+(btC!==1?'s':'')+' — split not determinable');
+}
+
+function renderMonthly(){
+  const el=document.getElementById('monthlyTable');
+  const btn=document.getElementById('deleteMonthBtn');
+  if(!S.months.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">📅</div><p>No data yet. Import your first Workday export above.</p></div>';
+    btn.style.display='none';return;
+  }
+  const budget=S.budget;
+  let cumH=0,cumC=0,cumTC=0,cumSC=0,cumBoth=0;
+
+  const rows=S.months.map((m,i)=>{
+    const hrs=m.workers.reduce((s,w)=>s+w.hours,0);
+    const cost=hrs*10;
+
+    // Role breakdown for this period
+    const tcH   = m.workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+    const scH   = m.workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+    const bothH = m.workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
+    const unassH= m.workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
+
+    cumH+=hrs;cumC+=cost;cumTC+=tcH;cumSC+=scH;cumBoth+=bothH;
+
+    const bpct=budget>0?Math.min((cumC/budget)*100,100):0;
+    const barW=budget>0?Math.min((cumC/budget)*100,100):50;
+    const over=cumC>budget&&budget>0;
+    const near=!over&&budget>0&&cumC/budget>=.75;
+    const sd=m.startDate?new Date(m.startDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+    const ed=m.endDate?new Date(m.endDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+    const sel=_selMonth===m.startDate+'|'+m.label;
+    const bg=i%2===0?'background:rgba(0,212,255,.015)':'';
+
+    return `<tr style="${bg}" onclick="selectMonth('${m.startDate}','${esc(m.label)}')" class="${sel?'sel-row':''}">
+      <td><div class="mlbl">${esc(m.label)}</div><div class="mrange">${sd} – ${ed}</div></td>
+      <td class="r" style="color:var(--cyan)">${tcH>0?tcH.toFixed(2):'—'}</td>
+      <td class="r" style="color:var(--green)">${scH>0?scH.toFixed(2):'—'}</td>
+      <td class="r" style="color:var(--warn)">${bothH>0?bothH.toFixed(2):'—'}</td>
+      <td class="r" style="color:var(--text3)">${unassH>0?unassH.toFixed(2):'—'}</td>
+      <td class="r" style="font-weight:600">${hrs.toFixed(2)}</td>
+      <td class="r" style="color:var(--sky)">$${fmt(cost)}</td>
+      <td class="r">
+        <div class="cumbar-wrap">
+          <div class="cumbar-track"><div class="cumbar-fill" style="width:${Math.min(barW,100)}%"></div></div>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:14px;color:${over?'var(--danger)':near?'var(--warn)':'var(--cyan)'}">$${fmt(cumC)}</span>
+        </div>
+      </td>
+      <td class="r" style="color:${over?'var(--danger)':near?'var(--warn)':'var(--text3)'}">
+        ${budget>0?Math.round(bpct)+'%':'—'}
+      </td>
+    </tr>`;
+  }).join('');
+
+  const over=cumC>budget&&budget>0;
+  const unassTotal=S.months.flatMap(m=>m.workers).filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
+
+  // Sub-header row labels
+  const subHdr=`<tr style="background:var(--surface)">
+    <th style="padding:8px 22px;font-size:11px;color:var(--text3);letter-spacing:.5px;border-bottom:1px solid var(--border)">Period</th>
+    <th class="r" style="padding:8px 22px;font-size:11px;color:var(--cyan);letter-spacing:.5px;border-bottom:1px solid var(--border)">TC Hrs</th>
+    <th class="r" style="padding:8px 22px;font-size:11px;color:var(--green);letter-spacing:.5px;border-bottom:1px solid var(--border)">Scribe Hrs</th>
+    <th class="r" style="padding:8px 22px;font-size:11px;color:var(--warn);letter-spacing:.5px;border-bottom:1px solid var(--border)">Both Hrs</th>
+    <th class="r" style="padding:8px 22px;font-size:11px;color:var(--text3);letter-spacing:.5px;border-bottom:1px solid var(--border)">Unassigned</th>
+    <th class="r" style="padding:8px 22px;font-size:11px;color:var(--text2);letter-spacing:.5px;border-bottom:1px solid var(--border)">Total Hrs</th>
+    <th class="r" style="padding:8px 22px;font-size:11px;color:var(--text2);letter-spacing:.5px;border-bottom:1px solid var(--border)">Cost</th>
+    <th class="r" style="padding:8px 22px;font-size:11px;color:var(--text2);letter-spacing:.5px;border-bottom:1px solid var(--border)">Cumul. Cost</th>
+    <th class="r" style="padding:8px 22px;font-size:11px;color:var(--text2);letter-spacing:.5px;border-bottom:1px solid var(--border)">% Budget</th>
+  </tr>`;
+
+  el.innerHTML=`<table>
+    <thead>${subHdr}</thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr>
+      <td><strong>TOTAL — ${S.months.length} period${S.months.length!==1?'s':''}</strong></td>
+      <td class="r" style="color:var(--cyan);font-weight:700">${cumTC>0?cumTC.toFixed(2):'—'}</td>
+      <td class="r" style="color:var(--green);font-weight:700">${cumSC>0?cumSC.toFixed(2):'—'}</td>
+      <td class="r" style="color:var(--warn);font-weight:700">${cumBoth>0?cumBoth.toFixed(2):'—'}</td>
+      <td class="r" style="color:var(--text3)">${unassTotal>0?unassTotal.toFixed(2):'—'}</td>
+      <td class="r" style="font-weight:700">${cumH.toFixed(2)}</td>
+      <td class="r" style="color:var(--sky);font-weight:700">$${fmt(cumC)}</td>
+      <td class="r" style="color:${over?'var(--danger)':'var(--cyan)'};font-weight:700">$${fmt(cumC)}</td>
+      <td class="r" style="color:${over?'var(--danger)':'var(--cyan)'};font-weight:700">
+        ${budget>0?Math.round((cumC/budget)*100)+'%':'—'}
+      </td>
+    </tr></tfoot>
+  </table>`;
+
+  btn.style.display=_selMonth?'flex':'none';
+}
+
+function selectMonth(startDate,label){
+  const key=startDate+'|'+label;
+  _selMonth=_selMonth===key?null:key;
+  renderMonthly();
+}
+
+function deleteSelectedMonth(){
+  if(!_selMonth)return;
+  const [sd,lb]=_selMonth.split('|');
+  if(!confirm('Remove '+lb+' from the tracker?'))return;
+  S.months=S.months.filter(m=>!(m.startDate===sd&&m.label===lb));
+  _selMonth=null;save();render();showToast('✓ Period removed');
+}
+
+function renderWorkers(){
+  const filter=document.getElementById('roleFilter').value;
+  const workers=latestWorkers();
+  const filtered=filter==='all'?workers:workers.filter(w=>(S.roles[w.name]||'NONE')===filter);
+  const el=document.getElementById('workerTable');
+  if(!filtered.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">${workers.length?'🔍':'👤'}</div><p>${workers.length?'No workers match this filter.':'No workers imported yet.'}</p></div>`;
+    return;
+  }
+  const maxH=Math.max(...filtered.map(w=>w.hours),1);
+  const rows=filtered.map(w=>{
+    const role=S.roles[w.name]||'NONE';
+    const bc={TC:'btc',SC:'bsc',BOTH:'bboth',NONE:'bnone'}[role];
+    const bl={TC:'TC',SC:'SCRIBE',BOTH:'BOTH',NONE:'—'}[role];
+    const pct=(w.hours/maxH)*100;
+    return `<tr>
+      <td><span style="font-weight:600;font-size:15px">${esc(w.name)}</span><span class="role-badge ${bc}" onclick="openModal('${escJs(w.name)}')">${bl}</span></td>
+      <td class="r"><div class="mb-wrap"><div class="mb-track"><div class="mb-fill" style="width:${pct}%"></div></div><span class="vhrs">${w.hours.toFixed(2)}</span></div></td>
+      <td class="r"><span class="vcost">$${fmt(w.hours*10)}</span></td>
+    </tr>`;
+  }).join('');
+  const totH=filtered.reduce((s,w)=>s+w.hours,0);
+  el.innerHTML=`<table>
+    <thead><tr><th>Worker</th><th class="r">Hours</th><th class="r">Cost @ $10/hr</th></tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr>
+      <td><strong>TOTAL (${filtered.length} workers)</strong></td>
+      <td class="r" style="color:var(--sky)">${totH.toFixed(2)}</td>
+      <td class="r" style="color:var(--cyan)">$${fmt(totH*10)}</td>
+    </tr></tfoot>
+  </table>`;
+}
+
+// Modal
+function openModal(name){
+  _mw=name;_pr=S.roles[name]||'NONE';
+  document.getElementById('modalName').textContent=name;
+  ['TC','SC','BOTH','NONE'].forEach(r=>document.getElementById('ro-'+r).classList.toggle('sel',r===_pr));
+  document.getElementById('overlay').classList.add('open');
+}
+function pickRole(r){_pr=r;['TC','SC','BOTH','NONE'].forEach(x=>document.getElementById('ro-'+x).classList.toggle('sel',x===r));}
+function confirmRole(){if(_mw){S.roles[_mw]=_pr;save();render();showToast('✓ '+_mw.split(' ')[0]+' → '+_pr);}closeModal();}
+function closeModal(e){if(e&&e.target!==document.getElementById('overlay'))return;document.getElementById('overlay').classList.remove('open');_mw=null;_pr=null;}
+
+// Export
+function exportCSV(){
+  if(!S.months.length){showToast('⚠ Nothing to export');return;}
+  let csv='OARS Hours Tracker Export\n';
+  csv+=`Exported,${new Date().toLocaleDateString()}\nSemester Budget,$${S.budget}\n\n`;
+  csv+='Month,Start Date,End Date,Worker,Role,Hours,Cost\n';
+  S.months.forEach(m=>m.workers.forEach(w=>{
+    csv+=`"${m.label}","${m.startDate}","${m.endDate}","${w.name}",${S.roles[w.name]||'NONE'},${w.hours.toFixed(2)},$${fmt(w.hours*10)}\n`;
+  }));
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`OARS_Hours_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  showToast('✓ CSV exported');
+}
+
+// Clear
+function clearAll(){
+  if(!confirm('Clear all imported data? Role assignments will be kept.'))return;
+  S.months=[];S.prevSnapshot=null;_selMonth=null;save();render();showToast('✓ Cleared');
+}
+
+// Budget input
+document.getElementById('budgetInput').addEventListener('input',()=>{S.budget=parseFloat(document.getElementById('budgetInput').value)||0;renderBudget();renderMonthly();save();});
+
+// Utils
+function fmt(n){return parseFloat(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function s(id,v){document.getElementById(id).textContent=v;}
+function esc(x){return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escJs(x){return String(x).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+// Boot
+load();
+document.getElementById('budgetInput').value=S.budget||5818;
+const now=new Date(),y=now.getFullYear(),m=String(now.getMonth()+1).padStart(2,'0');
+const lastDay=new Date(y,now.getMonth()+1,0).getDate();
+document.getElementById('startDate').value=`${y}-${m}-01`;
+document.getElementById('endDate').value=`${y}-${m}-${lastDay}`;
+const mnms=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const sl=document.getElementById('monthLabel');const cur=mnms[now.getMonth()];
+if([...sl.options].some(o=>o.value===cur))sl.value=cur;
+render();
+</script>
+</body>
+</html>
