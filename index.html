@@ -258,15 +258,7 @@ select{padding-right:32px;}
   <h2>Import Workday Export <span>EXCEL .xlsx</span></h2>
   <div class="import-row">
     <div class="field">
-      <label>Start Date</label>
-      <input type="date" id="startDate">
-    </div>
-    <div class="field">
-      <label>End Date</label>
-      <input type="date" id="endDate">
-    </div>
-    <div class="field">
-      <label>Month</label>
+      <label>Month Label <span style="font-size:11px;color:var(--text3);font-weight:400">(auto-detected, adjust if needed)</span></label>
       <div class="sw">
         <select id="monthLabel">
           <option value="September">September</option>
@@ -282,10 +274,19 @@ select{padding-right:32px;}
         </select>
       </div>
     </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <label style="font-size:13px;color:var(--text3);font-weight:500">Detected Range</label>
+      <div id="detectedRange" style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--cyan);background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;min-width:200px">
+        — select a file —
+      </div>
+    </div>
     <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">⬆&nbsp;Import Excel</button>
     <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFile(event)">
   </div>
 </div>
+<!-- Hidden date fields still used internally -->
+<input type="date" id="startDate" style="display:none">
+<input type="date" id="endDate" style="display:none">
 
 <!-- Budget -->
 <div class="budget-row">
@@ -411,13 +412,15 @@ function handleFile(e){
       const datePat=/^(\d{2}\/\d{2}\/\d{4})/;
       const dateCols=header.filter(h=>datePat.test(h));
       if(dateCols.length>=2){
-        const toISO=s=>{const[m,d,y]=s.match(datePat)[1].split('/');return `${y}-${m}-${d}`;};
+        const toISO=s=>{const[mo,d,y]=s.match(datePat)[1].split('/');return `${y}-${mo}-${d}`;};
         const firstDate=toISO(dateCols[0]);
         const lastDate=toISO(dateCols[dateCols.length-1]);
-        // Set the date fields automatically
         document.getElementById('startDate').value=firstDate;
         document.getElementById('endDate').value=lastDate;
-        // Auto-select month label from the first date
+        // Show detected range
+        const fmt2=iso=>new Date(iso+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+        document.getElementById('detectedRange').textContent=fmt2(firstDate)+' – '+fmt2(lastDate);
+        // Auto-select month label
         const mo=new Date(firstDate+'T00:00:00').toLocaleString('en-US',{month:'long'});
         const sl=document.getElementById('monthLabel');
         if([...sl.options].some(o=>o.value===mo))sl.value=mo;
@@ -669,8 +672,11 @@ async function exportCSV(){
   if(!S.months.length){showToast('⚠ Nothing to export');return;}
   showToast('⏳ Building Word doc...');
 
+  // docx CDN exposes as window.docx
+  const docxLib = window.docx;
+  if(!docxLib){showToast('⚠ docx library not loaded yet, try again');return;}
   const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
-          AlignmentType, BorderStyle, WidthType, ShadingType, PageNumber, Footer } = docx;
+          AlignmentType, BorderStyle, WidthType, ShadingType, PageNumber, Footer } = docxLib;
 
   const budget=S.budget;
   const allW=allWorkers();
@@ -908,12 +914,9 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 // Boot
 load();
 document.getElementById('budgetInput').value=S.budget||5818;
-const now=new Date(),y=now.getFullYear(),m=String(now.getMonth()+1).padStart(2,'0');
-const lastDay=new Date(y,now.getMonth()+1,0).getDate();
-document.getElementById('startDate').value=`${y}-${m}-01`;
-document.getElementById('endDate').value=`${y}-${m}-${lastDay}`;
+// Auto-select current month in dropdown on load
 const mnms=['January','February','March','April','May','June','July','August','September','October','November','December'];
-const sl=document.getElementById('monthLabel');const cur=mnms[now.getMonth()];
+const sl=document.getElementById('monthLabel');const cur=mnms[new Date().getMonth()];
 if([...sl.options].some(o=>o.value===cur))sl.value=cur;
 render();
 </script>
