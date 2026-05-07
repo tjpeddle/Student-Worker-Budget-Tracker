@@ -391,10 +391,7 @@ function save(){localStorage.setItem(KEY,JSON.stringify(S));}
 
 function handleFile(e){
   const file=e.target.files[0];if(!file)return;
-  const start=document.getElementById('startDate').value;
-  const end=document.getElementById('endDate').value;
   const ml=document.getElementById('monthLabel').value;
-  if(!start||!end){showToast('⚠ Set start and end date first');e.target.value='';return;}
   const reader=new FileReader();
   reader.onload=ev=>{
     try{
@@ -446,7 +443,9 @@ function handleFile(e){
       // snapshot
       const all=S.months.flatMap(m=>m.workers);
       if(all.length){const th=all.reduce((s,w)=>s+w.hours,0);S.prevSnapshot={totalHrs:th,totalCost:th*10};}
-      // add/replace
+      // add/replace — read dates after auto-detection filled the hidden fields
+      const start=document.getElementById('startDate').value;
+      const end=document.getElementById('endDate').value;
       const idx=S.months.findIndex(m=>m.label===ml&&m.startDate===start);
       const entry={label:ml,startDate:start,endDate:end,workers,importedAt:new Date().toISOString()};
       if(idx>=0)S.months[idx]=entry;else S.months.push(entry);
