@@ -379,6 +379,7 @@ select{padding-right:32px;}
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
 <script>
 const KEY = 'oars_tracker_v2';
 let S = { months:[], roles:{}, budget:5818, prevSnapshot:null };
@@ -405,6 +406,23 @@ function handleFile(e){
       const workerCol=header.findIndex(h=>/^worker$/i.test(h));
       const totalCol=header.findIndex(h=>/total hours/i.test(h));
       const empTypeCol=header.findIndex(h=>/employee type/i.test(h));
+
+      // Auto-detect date range from sub-period column headers (MM/DD/YYYY format)
+      const datePat=/^(\d{2}\/\d{2}\/\d{4})/;
+      const dateCols=header.filter(h=>datePat.test(h));
+      if(dateCols.length>=2){
+        const toISO=s=>{const[m,d,y]=s.match(datePat)[1].split('/');return `${y}-${m}-${d}`;};
+        const firstDate=toISO(dateCols[0]);
+        const lastDate=toISO(dateCols[dateCols.length-1]);
+        // Set the date fields automatically
+        document.getElementById('startDate').value=firstDate;
+        document.getElementById('endDate').value=lastDate;
+        // Auto-select month label from the first date
+        const mo=new Date(firstDate+'T00:00:00').toLocaleString('en-US',{month:'long'});
+        const sl=document.getElementById('monthLabel');
+        if([...sl.options].some(o=>o.value===mo))sl.value=mo;
+      }
+
       if(workerCol>=0&&totalCol>=0){
         for(let i=1;i<rows.length;i++){
           const row=rows[i];
@@ -646,9 +664,14 @@ function pickRole(r){_pr=r;['TC','SC','BOTH','NONE'].forEach(x=>document.getElem
 function confirmRole(){if(_mw){S.roles[_mw]=_pr;save();render();showToast('✓ '+_mw.split(' ')[0]+' → '+_pr);}closeModal();}
 function closeModal(e){if(e&&e.target!==document.getElementById('overlay'))return;document.getElementById('overlay').classList.remove('open');_mw=null;_pr=null;}
 
-// Export — printable HTML summary report
-function exportCSV(){
+// Export — Word document via docx CDN
+async function exportCSV(){
   if(!S.months.length){showToast('⚠ Nothing to export');return;}
+  showToast('⏳ Building Word doc...');
+
+  const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+          AlignmentType, BorderStyle, WidthType, ShadingType, PageNumber, Footer } = docx;
+
   const budget=S.budget;
   const allW=allWorkers();
   const totH=allW.reduce((s,w)=>s+w.hours,0);
@@ -660,155 +683,210 @@ function exportCSV(){
   const pctUsed=budget>0?((totC/budget)*100).toFixed(1):'—';
   const remaining=budget>0?budget-totC:null;
   const exportDate=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
-  const periods=S.months.length;
 
-  // Monthly rows
-  let cumH=0,cumC=0;
-  const mRows=S.months.map((m,i)=>{
+  const BLUE='1E3A5F'; const LGRAY='F1F5F9'; const WHITE='FFFFFF';
+  const RED='DC2626'; const GREEN='059669'; const AMBER='D97706'; const CYAN='0284C7';
+
+  const brd={style:BorderStyle.SINGLE,size:1,color:'CCCCCC'};
+  const brds={top:brd,bottom:brd,left:brd,right:brd};
+
+  function hCell(text,width,bg=BLUE){
+    return new TableCell({borders:brds,width:{size:width,type:WidthType.DXA},
+      shading:{fill:bg,type:ShadingType.CLEAR},
+      margins:{top:80,bottom:80,left:120,right:120},
+      children:[new Paragraph({alignment:AlignmentType.CENTER,
+        children:[new TextRun({text,bold:true,color:'FFFFFF',font:'Arial',size:20})]})]});
+  }
+
+  function dCell(text,opts={}){
+    const{width=1800,bold=false,align=AlignmentType.LEFT,fill=WHITE,color='1E293B',italic=false}=opts;
+    return new TableCell({borders:brds,width:{size:width,type:WidthType.DXA},
+      shading:{fill,type:ShadingType.CLEAR},
+      margins:{top:80,bottom:80,left:120,right:120},
+      children:[new Paragraph({alignment:align,
+        children:[new TextRun({text:String(text),bold,color,italic,font:'Arial',size:20})]})]});
+  }
+
+  function heading(text){
+    return new Paragraph({spacing:{before:280,after:100},
+      border:{bottom:{style:BorderStyle.SINGLE,size:4,color:BLUE,space:1}},
+      children:[new TextRun({text,bold:true,size:26,color:BLUE,font:'Arial'})]});
+  }
+
+  function body(text,opts={}){
+    return new Paragraph({spacing:{before:60,after:60},
+      children:[new TextRun({text,font:'Arial',size:20,...opts})]});
+  }
+
+  function spacer(){return new Paragraph({spacing:{before:120},children:[]});}
+
+  // ── Budget status table ──
+  const budgetRows=[
+    new TableRow({children:[
+      hCell('Current Budget',2340),hCell('Total Spent',2340),hCell('Remaining',2340),hCell('% Used',2340),
+    ]}),
+    new TableRow({children:[
+      dCell('$'+budget.toLocaleString('en-US'),{width:2340,bold:true,align:AlignmentType.CENTER}),
+      dCell('$'+fmt(totC),{width:2340,bold:true,align:AlignmentType.CENTER,color:totC>budget?RED:'1E293B'}),
+      dCell(remaining!==null?(remaining<0?'-$'+fmt(Math.abs(remaining)):'$'+fmt(remaining)):'—',
+        {width:2340,bold:true,align:AlignmentType.CENTER,color:remaining!==null&&remaining<0?RED:GREEN}),
+      dCell(pctUsed+'%',{width:2340,bold:true,align:AlignmentType.CENTER,
+        color:totC>budget?RED:totC/budget>=.75?AMBER:GREEN}),
+    ]}),
+  ];
+
+  // ── Role summary table ──
+  const roleRows=[
+    new TableRow({children:[
+      hCell('Testing Center Hrs',2340),hCell('Scribe Hrs',2340),hCell('Both Roles Hrs',2340),hCell('Unassigned Hrs',2340),
+    ]}),
+    new TableRow({children:[
+      dCell(tcH.toFixed(2)+' hrs  ($'+fmt(tcH*10)+')',{width:2340,align:AlignmentType.CENTER,color:CYAN,bold:true}),
+      dCell(scH.toFixed(2)+' hrs  ($'+fmt(scH*10)+')',{width:2340,align:AlignmentType.CENTER,color:GREEN,bold:true}),
+      dCell(btH.toFixed(2)+' hrs',{width:2340,align:AlignmentType.CENTER,color:AMBER,bold:true}),
+      dCell(unH.toFixed(2)+' hrs',{width:2340,align:AlignmentType.CENTER,color:'94A3B8',bold:true}),
+    ]}),
+  ];
+
+  // ── Monthly table ──
+  let cumH2=0,cumC2=0;
+  const mBodyRows=S.months.map((m,i)=>{
     const hrs=m.workers.reduce((s,w)=>s+w.hours,0);
     const cost=hrs*10;
     const tch=m.workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
     const sch=m.workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
     const bth=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
     const unh=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
-    cumH+=hrs;cumC+=cost;
-    const over=budget>0&&cumC>budget;
-    const near=!over&&budget>0&&cumC/budget>=0.75;
+    cumH2+=hrs;cumC2+=cost;
+    const over=budget>0&&cumC2>budget;
+    const near=!over&&budget>0&&cumC2/budget>=0.75;
+    const fill=i%2===0?LGRAY:WHITE;
     const sd=m.startDate?new Date(m.startDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
     const ed=m.endDate?new Date(m.endDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
-    const bg=i%2===0?'#f8fafc':'#ffffff';
-    const cumColor=over?'#dc2626':near?'#d97706':'#1e40af';
-    return `<tr style="background:${bg}">
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0"><strong>${m.label}</strong><br><span style="font-size:11px;color:#64748b">${sd} – ${ed}</span></td>
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;color:#0284c7">${tch>0?tch.toFixed(2):'—'}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;color:#059669">${sch>0?sch.toFixed(2):'—'}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;color:#d97706">${bth>0?bth.toFixed(2):'—'}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;color:#94a3b8">${unh>0?unh.toFixed(2):'—'}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600">${hrs.toFixed(2)}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right">$${fmt(cost)}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700;color:${cumColor}">$${fmt(cumC)}</td>
-    </tr>`;
-  }).join('');
+    return new TableRow({children:[
+      dCell(m.label+'\n'+sd+' – '+ed,{width:1600,fill}),
+      dCell(tch>0?tch.toFixed(2):'—',{width:1200,fill,align:AlignmentType.RIGHT,color:CYAN}),
+      dCell(sch>0?sch.toFixed(2):'—',{width:1200,fill,align:AlignmentType.RIGHT,color:GREEN}),
+      dCell(bth>0?bth.toFixed(2):'—',{width:1200,fill,align:AlignmentType.RIGHT,color:AMBER}),
+      dCell(unh>0?unh.toFixed(2):'—',{width:1100,fill,align:AlignmentType.RIGHT,color:'94A3B8'}),
+      dCell(hrs.toFixed(2),{width:1100,fill,align:AlignmentType.RIGHT,bold:true}),
+      dCell('$'+fmt(cost),{width:1220,fill,align:AlignmentType.RIGHT}),
+      dCell('$'+fmt(cumC2),{width:1540,fill,align:AlignmentType.RIGHT,bold:true,color:over?RED:near?AMBER:BLUE}),
+    ]});
+  });
 
-  // Worker rows grouped by role
+  const mTotalRow=new TableRow({children:[
+    dCell('TOTAL',{width:1600,bold:true,fill:'E2E8F0'}),
+    dCell(tcH>0?tcH.toFixed(2):'—',{width:1200,bold:true,fill:'E2E8F0',align:AlignmentType.RIGHT,color:CYAN}),
+    dCell(scH>0?scH.toFixed(2):'—',{width:1200,bold:true,fill:'E2E8F0',align:AlignmentType.RIGHT,color:GREEN}),
+    dCell(btH>0?btH.toFixed(2):'—',{width:1200,bold:true,fill:'E2E8F0',align:AlignmentType.RIGHT,color:AMBER}),
+    dCell(unH>0?unH.toFixed(2):'—',{width:1100,bold:true,fill:'E2E8F0',align:AlignmentType.RIGHT,color:'94A3B8'}),
+    dCell(totH.toFixed(2),{width:1100,bold:true,fill:'E2E8F0',align:AlignmentType.RIGHT}),
+    dCell('$'+fmt(totC),{width:1220,bold:true,fill:'E2E8F0',align:AlignmentType.RIGHT}),
+    dCell('$'+fmt(totC),{width:1540,bold:true,fill:'E2E8F0',align:AlignmentType.RIGHT,color:totC>budget?RED:BLUE}),
+  ]});
+
+  const monthlyTable=new Table({
+    width:{size:11160,type:WidthType.DXA},
+    columnWidths:[1600,1200,1200,1200,1100,1100,1220,1540],
+    rows:[
+      new TableRow({tableHeader:true,children:[
+        hCell('Period',1600),hCell('TC Hrs',1200),hCell('Scribe Hrs',1200),
+        hCell('Both Hrs',1200),hCell('Unassigned',1100),hCell('Total Hrs',1100),
+        hCell('Cost',1220),hCell('Cumul. Cost',1540),
+      ]}),
+      ...mBodyRows,
+      mTotalRow,
+    ]
+  });
+
+  // ── Worker detail table ──
   const roleOrder=['TC','SC','BOTH','NONE'];
   const roleLabel={'TC':'Testing Center','SC':'Scribe','BOTH':'Both Roles','NONE':'Unassigned'};
-  const roleColor={'TC':'#0284c7','SC':'#059669','BOTH':'#d97706','NONE':'#94a3b8'};
-  let wRows='';
+  const roleColor={'TC':CYAN,'SC':GREEN,'BOTH':AMBER,'NONE':'94A3B8'};
+  const workerRows=[];
   roleOrder.forEach(role=>{
     const ww=allW.filter(w=>(S.roles[w.name]||'NONE')===role);
     if(!ww.length)return;
-    wRows+=`<tr><td colspan="3" style="padding:8px 14px;background:#f1f5f9;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${roleColor[role]};border-bottom:1px solid #e2e8f0">${roleLabel[role]}</td></tr>`;
+    // Role group header row
+    workerRows.push(new TableRow({children:[
+      new TableCell({borders:brds,width:{size:6240,type:WidthType.DXA},columnSpan:3,
+        shading:{fill:'E2E8F0',type:ShadingType.CLEAR},
+        margins:{top:60,bottom:60,left:120,right:120},
+        children:[new Paragraph({children:[new TextRun({text:roleLabel[role],bold:true,size:18,color:roleColor[role],font:'Arial'})]})]
+      }),
+    ]}));
     ww.forEach((w,i)=>{
-      const bg=i%2===0?'#f8fafc':'#ffffff';
-      wRows+=`<tr style="background:${bg}"><td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;padding-left:22px">${w.name}</td><td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;text-align:right">${w.hours.toFixed(2)}</td><td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;text-align:right">$${fmt(w.hours*10)}</td></tr>`;
+      const fill=i%2===0?LGRAY:WHITE;
+      workerRows.push(new TableRow({children:[
+        dCell(w.name,{width:4680,fill}),
+        dCell(w.hours.toFixed(2),{width:780,fill,align:AlignmentType.RIGHT}),
+        dCell('$'+fmt(w.hours*10),{width:780,fill,align:AlignmentType.RIGHT}),
+      ]}));
     });
   });
+  // total row
+  workerRows.push(new TableRow({children:[
+    dCell('TOTAL ('+allW.length+' workers)',{width:4680,bold:true,fill:'E2E8F0'}),
+    dCell(totH.toFixed(2),{width:780,bold:true,fill:'E2E8F0',align:AlignmentType.RIGHT}),
+    dCell('$'+fmt(totC),{width:780,bold:true,fill:'E2E8F0',align:AlignmentType.RIGHT}),
+  ]}));
 
-  const budgetBar=budget>0?`
-    <div style="margin:16px 0">
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;margin-bottom:6px">
-        <span>Spent: <strong style="color:#1e40af">$${fmt(totC)}</strong></span>
-        <span>Budget: <strong>$${budget.toLocaleString('en-US')}</strong></span>
-        <span style="color:${totC>budget?'#dc2626':totC/budget>=.75?'#d97706':'#059669'};font-weight:700">${pctUsed}% used</span>
-      </div>
-      <div style="background:#e2e8f0;border-radius:6px;height:12px;overflow:hidden">
-        <div style="height:100%;width:${Math.min((totC/budget)*100,100)}%;border-radius:6px;background:${totC>budget?'#dc2626':totC/budget>=.75?'#d97706':'#3b82f6'}"></div>
-      </div>
-      ${remaining!==null?`<div style="font-size:12px;margin-top:6px;color:${remaining<0?'#dc2626':'#059669'};font-weight:600">${remaining<0?'Over budget by $'+fmt(Math.abs(remaining)):'Remaining: $'+fmt(remaining)}</div>`:''}
-    </div>`:'';
+  const workerTable=new Table({
+    width:{size:6240,type:WidthType.DXA},
+    columnWidths:[4680,780,780],
+    rows:[
+      new TableRow({tableHeader:true,children:[
+        hCell('Worker',4680),hCell('Hours',780),hCell('Cost',780),
+      ]}),
+      ...workerRows,
+    ]
+  });
 
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <title>OARS Hours Summary — ${exportDate}</title>
-  <style>
-    body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#1e293b;margin:0;padding:32px;background:#fff}
-    h1{font-size:22px;color:#1e3a5f;margin:0 0 4px}
-    h2{font-size:14px;font-weight:700;color:#1e3a5f;margin:24px 0 10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #1e3a5f;padding-bottom:4px}
-    table{width:100%;border-collapse:collapse;margin-bottom:8px}
-    th{background:#1e3a5f;color:#fff;padding:10px 14px;text-align:left;font-size:12px;letter-spacing:.5px}
-    th.r{text-align:right}
-    tfoot td{background:#1e3a5f;color:#fff;padding:10px 14px;font-weight:700}
-    tfoot td.r{text-align:right}
-    .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
-    .stat{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px}
-    .stat-lbl{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:4px}
-    .stat-val{font-size:22px;font-weight:700;color:#1e3a5f}
-    .stat-sub{font-size:12px;color:#94a3b8;margin-top:3px}
-    @media print{body{padding:16px}.no-print{display:none}}
-  </style>
-  </head><body>
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:3px solid #1e3a5f">
-    <div>
-      <h1>OARS Hours Tracker — Summary Report</h1>
-      <div style="color:#64748b;font-size:13px;margin-top:4px">High Point University &nbsp;·&nbsp; Accessibility Resources &amp; Services</div>
-    </div>
-    <div style="text-align:right;font-size:12px;color:#94a3b8">
-      <div>Exported: ${exportDate}</div>
-      <div>Periods covered: ${periods}</div>
-      <div>Hourly rate: $10.00</div>
-    </div>
-  </div>
+  // ── Document ──
+  const doc=new Document({
+    styles:{default:{document:{run:{font:'Arial',size:20}}}},
+    sections:[{
+      properties:{page:{size:{width:12240,height:15840},margin:{top:1080,right:1080,bottom:1080,left:1080}}},
+      footers:{default:new Footer({children:[new Paragraph({
+        alignment:AlignmentType.CENTER,
+        children:[new TextRun({text:'OARS Hours Tracker  |  High Point University  |  Page ',font:'Arial',size:16,color:'94A3B8'}),
+          new TextRun({children:[PageNumber.CURRENT],font:'Arial',size:16,color:'94A3B8'})]
+      })]})},
+      children:[
+        // Title
+        new Paragraph({spacing:{before:0,after:60},children:[new TextRun({text:'OARS Hours Tracker — Summary Report',bold:true,size:36,color:BLUE,font:'Arial'})]}),
+        new Paragraph({spacing:{before:0,after:60},children:[new TextRun({text:'High Point University  ·  Accessibility Resources & Services',size:20,color:'64748B',font:'Arial'})]}),
+        new Paragraph({spacing:{before:0,after:240},children:[new TextRun({text:'Exported: '+exportDate+'   |   Periods: '+S.months.length+'   |   Rate: $10.00/hr',size:18,color:'94A3B8',font:'Arial'})]}),
+        // Budget
+        heading('Budget Status'),
+        new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[2340,2340,2340,2340],rows:budgetRows}),
+        spacer(),
+        // Role summary
+        heading('Summary by Role'),
+        new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[2340,2340,2340,2340],rows:roleRows}),
+        spacer(),
+        body('Note: Workers assigned "Both Roles" are included in both TC and Scribe hour totals. Their hours cannot be split by role from the export alone.',{italic:true,color:'94A3B8',size:18}),
+        spacer(),
+        // Monthly
+        heading('Monthly Running Total'),
+        monthlyTable,
+        spacer(),
+        // Workers
+        heading('Worker Detail by Role'),
+        workerTable,
+        spacer(),
+        new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Office of Accessibility Resources and Services (OARS)  |  High Point University',size:16,color:'94A3B8',font:'Arial',italic:true})]}),
+      ]
+    }]
+  });
 
-  <h2>Budget Status</h2>
-  ${budgetBar}
-
-  <h2>Summary by Role</h2>
-  <div class="stat-grid">
-    <div class="stat"><div class="stat-lbl">Testing Center</div><div class="stat-val" style="color:#0284c7">${tcH.toFixed(2)} hrs</div><div class="stat-sub">$${fmt(tcH*10)}</div></div>
-    <div class="stat"><div class="stat-lbl">Scribe</div><div class="stat-val" style="color:#059669">${scH.toFixed(2)} hrs</div><div class="stat-sub">$${fmt(scH*10)}</div></div>
-    <div class="stat"><div class="stat-lbl">Both Roles</div><div class="stat-val" style="color:#d97706">${btH.toFixed(2)} hrs</div><div class="stat-sub">Split not determinable</div></div>
-    <div class="stat"><div class="stat-lbl">Unassigned</div><div class="stat-val" style="color:#94a3b8">${unH.toFixed(2)} hrs</div><div class="stat-sub">$${fmt(unH*10)}</div></div>
-    <div class="stat"><div class="stat-lbl">Total Hours</div><div class="stat-val">${totH.toFixed(2)} hrs</div><div class="stat-sub">$${fmt(totC)}</div></div>
-    <div class="stat"><div class="stat-lbl">% of Budget Used</div><div class="stat-val" style="color:${totC>budget?'#dc2626':totC/budget>=.75?'#d97706':'#059669'}">${pctUsed}%</div><div class="stat-sub">of $${budget.toLocaleString('en-US')}</div></div>
-  </div>
-
-  <h2>Monthly Running Total</h2>
-  <table>
-    <thead><tr>
-      <th>Period</th>
-      <th class="r" style="color:#7dd3fc">TC Hrs</th>
-      <th class="r" style="color:#6ee7b7">Scribe Hrs</th>
-      <th class="r" style="color:#fde68a">Both Hrs</th>
-      <th class="r">Unassigned</th>
-      <th class="r">Total Hrs</th>
-      <th class="r">Cost</th>
-      <th class="r">Cumul. Cost</th>
-    </tr></thead>
-    <tbody>${mRows}</tbody>
-    <tfoot><tr>
-      <td><strong>TOTAL</strong></td>
-      <td class="r">${tcH>0?tcH.toFixed(2):'—'}</td>
-      <td class="r">${scH>0?scH.toFixed(2):'—'}</td>
-      <td class="r">${btH>0?btH.toFixed(2):'—'}</td>
-      <td class="r">${unH>0?unH.toFixed(2):'—'}</td>
-      <td class="r">${totH.toFixed(2)}</td>
-      <td class="r">$${fmt(totC)}</td>
-      <td class="r">$${fmt(totC)}</td>
-    </tr></tfoot>
-  </table>
-
-  <h2 style="margin-top:28px">Worker Detail</h2>
-  <table>
-    <thead><tr><th>Worker</th><th class="r">Total Hours</th><th class="r">Total Cost</th></tr></thead>
-    <tbody>${wRows}</tbody>
-    <tfoot><tr>
-      <td><strong>TOTAL (${allW.length} workers)</strong></td>
-      <td class="r">${totH.toFixed(2)}</td>
-      <td class="r">$${fmt(totC)}</td>
-    </tr></tfoot>
-  </table>
-
-  <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between">
-    <span>OARS Hours Tracker — High Point University</span>
-    <span>Generated ${exportDate}</span>
-  </div>
-  <script>window.onload=()=>window.print();<\/script>
-  </body></html>`;
-
-  const w=window.open('','_blank');
-  w.document.write(html);
-  w.document.close();
-  showToast('✓ Summary report opened');
+  const blob=await Packer.toBlob(doc);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='OARS_Hours_Summary_'+new Date().toISOString().slice(0,10)+'.docx';
+  a.click();
+  showToast('✓ Word doc downloaded');
 }
 
 // Clear
