@@ -380,7 +380,7 @@ select{padding-right:32px;}
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.8.2/docx.umd.min.js"></script>
 <script>
 const KEY = 'oars_tracker_v2';
 let S = { months:[], roles:{}, budget:5818, prevSnapshot:null };
@@ -671,12 +671,12 @@ function closeModal(e){if(e&&e.target!==document.getElementById('overlay'))retur
 async function exportCSV(){
   if(!S.months.length){showToast('⚠ Nothing to export');return;}
   showToast('⏳ Building Word doc...');
-
+  try{
   // docx CDN exposes as window.docx
   const docxLib = window.docx;
   if(!docxLib){showToast('⚠ docx library not loaded yet, try again');return;}
   const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
-          AlignmentType, BorderStyle, WidthType, ShadingType, PageNumber, Footer } = docxLib;
+          AlignmentType, BorderStyle, WidthType, ShadingType, Footer } = docxLib;
 
   const budget=S.budget;
   const allW=allWorkers();
@@ -856,8 +856,7 @@ async function exportCSV(){
       properties:{page:{size:{width:12240,height:15840},margin:{top:1080,right:1080,bottom:1080,left:1080}}},
       footers:{default:new Footer({children:[new Paragraph({
         alignment:AlignmentType.CENTER,
-        children:[new TextRun({text:'OARS Hours Tracker  |  High Point University  |  Page ',font:'Arial',size:16,color:'94A3B8'}),
-          new TextRun({children:[PageNumber.CURRENT],font:'Arial',size:16,color:'94A3B8'})]
+        children:[new TextRun({text:'OARS Hours Tracker  ·  High Point University  ·  Accessibility Resources & Services',font:'Arial',size:16,color:'94A3B8'})]
       })]})},
       children:[
         // Title
@@ -893,6 +892,7 @@ async function exportCSV(){
   a.download='OARS_Hours_Summary_'+new Date().toISOString().slice(0,10)+'.docx';
   a.click();
   showToast('✓ Word doc downloaded');
+  }catch(err){showToast('⚠ Export error: '+err.message);console.error(err);}
 }
 
 // Clear
