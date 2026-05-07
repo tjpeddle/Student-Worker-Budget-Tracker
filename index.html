@@ -399,15 +399,26 @@ function handleFile(e){
       const wb=XLSX.read(ev.target.result,{type:'binary'});
       const ws=wb.Sheets[wb.SheetNames[0]];
       const rows=XLSX.utils.sheet_to_json(ws,{header:1});
-      const workers=[];let found=false;
-      for(const row of rows){
-        if(!found){
-          const l=row.map(c=>String(c||'').toLowerCase());
-          if(l.some(c=>c.includes('worker'))&&l.some(c=>c.includes('hour'))){found=true;continue;}
-        }else{
-          const name=String(row[0]||'').trim();
-          const hrs=parseFloat(row[1]);
-          if(name&&!isNaN(hrs)&&name.toLowerCase()!=='total')workers.push({name,hours:hrs});
+      const workers=[];
+      if(!rows.length){showToast('⚠ Empty file');e.target.value='';return;}
+      const header=rows[0].map(c=>String(c||'').trim());
+      const workerCol=header.findIndex(h=>/^worker$/i.test(h));
+      const totalCol=header.findIndex(h=>/total hours/i.test(h));
+      const empTypeCol=header.findIndex(h=>/employee type/i.test(h));
+      if(workerCol>=0&&totalCol>=0){
+        for(let i=1;i<rows.length;i++){
+          const row=rows[i];
+          const name=String(row[workerCol]||'').trim();
+          const hrs=parseFloat(row[totalCol]);
+          const empType=empTypeCol>=0?String(row[empTypeCol]||'').trim():'Student';
+          if(!name||isNaN(hrs)||name.toLowerCase()==='total')continue;
+          workers.push({name,hours:hrs,empType});
+        }
+      }else{
+        let found=false;
+        for(const row of rows){
+          if(!found){const l=row.map(c=>String(c||'').toLowerCase());if(l.some(c=>c.includes('worker'))&&l.some(c=>c.includes('hour'))){found=true;continue;}}
+          else{const name=String(row[0]||'').trim();const hrs=parseFloat(row[1]);if(name&&!isNaN(hrs)&&name.toLowerCase()!=='total')workers.push({name,hours:hrs,empType:'Student'});}
         }
       }
       if(!workers.length){showToast('⚠ No worker rows found');e.target.value='';return;}
@@ -635,19 +646,169 @@ function pickRole(r){_pr=r;['TC','SC','BOTH','NONE'].forEach(x=>document.getElem
 function confirmRole(){if(_mw){S.roles[_mw]=_pr;save();render();showToast('✓ '+_mw.split(' ')[0]+' → '+_pr);}closeModal();}
 function closeModal(e){if(e&&e.target!==document.getElementById('overlay'))return;document.getElementById('overlay').classList.remove('open');_mw=null;_pr=null;}
 
-// Export
+// Export — printable HTML summary report
 function exportCSV(){
   if(!S.months.length){showToast('⚠ Nothing to export');return;}
-  let csv='OARS Hours Tracker Export\n';
-  csv+=`Exported,${new Date().toLocaleDateString()}\nSemester Budget,$${S.budget}\n\n`;
-  csv+='Month,Start Date,End Date,Worker,Role,Hours,Cost\n';
-  S.months.forEach(m=>m.workers.forEach(w=>{
-    csv+=`"${m.label}","${m.startDate}","${m.endDate}","${w.name}",${S.roles[w.name]||'NONE'},${w.hours.toFixed(2)},$${fmt(w.hours*10)}\n`;
-  }));
-  const blob=new Blob([csv],{type:'text/csv'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=`OARS_Hours_${new Date().toISOString().slice(0,10)}.csv`;a.click();
-  showToast('✓ CSV exported');
+  const budget=S.budget;
+  const allW=allWorkers();
+  const totH=allW.reduce((s,w)=>s+w.hours,0);
+  const totC=totH*10;
+  const tcH=allW.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+  const scH=allW.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+  const btH=allW.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
+  const unH=allW.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
+  const pctUsed=budget>0?((totC/budget)*100).toFixed(1):'—';
+  const remaining=budget>0?budget-totC:null;
+  const exportDate=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  const periods=S.months.length;
+
+  // Monthly rows
+  let cumH=0,cumC=0;
+  const mRows=S.months.map((m,i)=>{
+    const hrs=m.workers.reduce((s,w)=>s+w.hours,0);
+    const cost=hrs*10;
+    const tch=m.workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+    const sch=m.workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+    const bth=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
+    const unh=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
+    cumH+=hrs;cumC+=cost;
+    const over=budget>0&&cumC>budget;
+    const near=!over&&budget>0&&cumC/budget>=0.75;
+    const sd=m.startDate?new Date(m.startDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+    const ed=m.endDate?new Date(m.endDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+    const bg=i%2===0?'#f8fafc':'#ffffff';
+    const cumColor=over?'#dc2626':near?'#d97706':'#1e40af';
+    return `<tr style="background:${bg}">
+      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0"><strong>${m.label}</strong><br><span style="font-size:11px;color:#64748b">${sd} – ${ed}</span></td>
+      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;color:#0284c7">${tch>0?tch.toFixed(2):'—'}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;color:#059669">${sch>0?sch.toFixed(2):'—'}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;color:#d97706">${bth>0?bth.toFixed(2):'—'}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;color:#94a3b8">${unh>0?unh.toFixed(2):'—'}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600">${hrs.toFixed(2)}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right">$${fmt(cost)}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700;color:${cumColor}">$${fmt(cumC)}</td>
+    </tr>`;
+  }).join('');
+
+  // Worker rows grouped by role
+  const roleOrder=['TC','SC','BOTH','NONE'];
+  const roleLabel={'TC':'Testing Center','SC':'Scribe','BOTH':'Both Roles','NONE':'Unassigned'};
+  const roleColor={'TC':'#0284c7','SC':'#059669','BOTH':'#d97706','NONE':'#94a3b8'};
+  let wRows='';
+  roleOrder.forEach(role=>{
+    const ww=allW.filter(w=>(S.roles[w.name]||'NONE')===role);
+    if(!ww.length)return;
+    wRows+=`<tr><td colspan="3" style="padding:8px 14px;background:#f1f5f9;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${roleColor[role]};border-bottom:1px solid #e2e8f0">${roleLabel[role]}</td></tr>`;
+    ww.forEach((w,i)=>{
+      const bg=i%2===0?'#f8fafc':'#ffffff';
+      wRows+=`<tr style="background:${bg}"><td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;padding-left:22px">${w.name}</td><td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;text-align:right">${w.hours.toFixed(2)}</td><td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;text-align:right">$${fmt(w.hours*10)}</td></tr>`;
+    });
+  });
+
+  const budgetBar=budget>0?`
+    <div style="margin:16px 0">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;margin-bottom:6px">
+        <span>Spent: <strong style="color:#1e40af">$${fmt(totC)}</strong></span>
+        <span>Budget: <strong>$${budget.toLocaleString('en-US')}</strong></span>
+        <span style="color:${totC>budget?'#dc2626':totC/budget>=.75?'#d97706':'#059669'};font-weight:700">${pctUsed}% used</span>
+      </div>
+      <div style="background:#e2e8f0;border-radius:6px;height:12px;overflow:hidden">
+        <div style="height:100%;width:${Math.min((totC/budget)*100,100)}%;border-radius:6px;background:${totC>budget?'#dc2626':totC/budget>=.75?'#d97706':'#3b82f6'}"></div>
+      </div>
+      ${remaining!==null?`<div style="font-size:12px;margin-top:6px;color:${remaining<0?'#dc2626':'#059669'};font-weight:600">${remaining<0?'Over budget by $'+fmt(Math.abs(remaining)):'Remaining: $'+fmt(remaining)}</div>`:''}
+    </div>`:'';
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>OARS Hours Summary — ${exportDate}</title>
+  <style>
+    body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#1e293b;margin:0;padding:32px;background:#fff}
+    h1{font-size:22px;color:#1e3a5f;margin:0 0 4px}
+    h2{font-size:14px;font-weight:700;color:#1e3a5f;margin:24px 0 10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #1e3a5f;padding-bottom:4px}
+    table{width:100%;border-collapse:collapse;margin-bottom:8px}
+    th{background:#1e3a5f;color:#fff;padding:10px 14px;text-align:left;font-size:12px;letter-spacing:.5px}
+    th.r{text-align:right}
+    tfoot td{background:#1e3a5f;color:#fff;padding:10px 14px;font-weight:700}
+    tfoot td.r{text-align:right}
+    .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+    .stat{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px}
+    .stat-lbl{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:4px}
+    .stat-val{font-size:22px;font-weight:700;color:#1e3a5f}
+    .stat-sub{font-size:12px;color:#94a3b8;margin-top:3px}
+    @media print{body{padding:16px}.no-print{display:none}}
+  </style>
+  </head><body>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:3px solid #1e3a5f">
+    <div>
+      <h1>OARS Hours Tracker — Summary Report</h1>
+      <div style="color:#64748b;font-size:13px;margin-top:4px">High Point University &nbsp;·&nbsp; Accessibility Resources &amp; Services</div>
+    </div>
+    <div style="text-align:right;font-size:12px;color:#94a3b8">
+      <div>Exported: ${exportDate}</div>
+      <div>Periods covered: ${periods}</div>
+      <div>Hourly rate: $10.00</div>
+    </div>
+  </div>
+
+  <h2>Budget Status</h2>
+  ${budgetBar}
+
+  <h2>Summary by Role</h2>
+  <div class="stat-grid">
+    <div class="stat"><div class="stat-lbl">Testing Center</div><div class="stat-val" style="color:#0284c7">${tcH.toFixed(2)} hrs</div><div class="stat-sub">$${fmt(tcH*10)}</div></div>
+    <div class="stat"><div class="stat-lbl">Scribe</div><div class="stat-val" style="color:#059669">${scH.toFixed(2)} hrs</div><div class="stat-sub">$${fmt(scH*10)}</div></div>
+    <div class="stat"><div class="stat-lbl">Both Roles</div><div class="stat-val" style="color:#d97706">${btH.toFixed(2)} hrs</div><div class="stat-sub">Split not determinable</div></div>
+    <div class="stat"><div class="stat-lbl">Unassigned</div><div class="stat-val" style="color:#94a3b8">${unH.toFixed(2)} hrs</div><div class="stat-sub">$${fmt(unH*10)}</div></div>
+    <div class="stat"><div class="stat-lbl">Total Hours</div><div class="stat-val">${totH.toFixed(2)} hrs</div><div class="stat-sub">$${fmt(totC)}</div></div>
+    <div class="stat"><div class="stat-lbl">% of Budget Used</div><div class="stat-val" style="color:${totC>budget?'#dc2626':totC/budget>=.75?'#d97706':'#059669'}">${pctUsed}%</div><div class="stat-sub">of $${budget.toLocaleString('en-US')}</div></div>
+  </div>
+
+  <h2>Monthly Running Total</h2>
+  <table>
+    <thead><tr>
+      <th>Period</th>
+      <th class="r" style="color:#7dd3fc">TC Hrs</th>
+      <th class="r" style="color:#6ee7b7">Scribe Hrs</th>
+      <th class="r" style="color:#fde68a">Both Hrs</th>
+      <th class="r">Unassigned</th>
+      <th class="r">Total Hrs</th>
+      <th class="r">Cost</th>
+      <th class="r">Cumul. Cost</th>
+    </tr></thead>
+    <tbody>${mRows}</tbody>
+    <tfoot><tr>
+      <td><strong>TOTAL</strong></td>
+      <td class="r">${tcH>0?tcH.toFixed(2):'—'}</td>
+      <td class="r">${scH>0?scH.toFixed(2):'—'}</td>
+      <td class="r">${btH>0?btH.toFixed(2):'—'}</td>
+      <td class="r">${unH>0?unH.toFixed(2):'—'}</td>
+      <td class="r">${totH.toFixed(2)}</td>
+      <td class="r">$${fmt(totC)}</td>
+      <td class="r">$${fmt(totC)}</td>
+    </tr></tfoot>
+  </table>
+
+  <h2 style="margin-top:28px">Worker Detail</h2>
+  <table>
+    <thead><tr><th>Worker</th><th class="r">Total Hours</th><th class="r">Total Cost</th></tr></thead>
+    <tbody>${wRows}</tbody>
+    <tfoot><tr>
+      <td><strong>TOTAL (${allW.length} workers)</strong></td>
+      <td class="r">${totH.toFixed(2)}</td>
+      <td class="r">$${fmt(totC)}</td>
+    </tr></tfoot>
+  </table>
+
+  <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between">
+    <span>OARS Hours Tracker — High Point University</span>
+    <span>Generated ${exportDate}</span>
+  </div>
+  <script>window.onload=()=>window.print();<\/script>
+  </body></html>`;
+
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  showToast('✓ Summary report opened');
 }
 
 // Clear
