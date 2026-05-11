@@ -6,241 +6,220 @@
 <title>OARS · Hours Tracker</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=DM+Sans:wght@300;400;500;600;700&display=swap');
-
 :root {
-  --bg:      #080d14;
-  --surface: #0d1520;
-  --card:    #111d2e;
-  --card2:   #152236;
-  --border:  #1e3050;
-  --border2: #264070;
-  --cyan:    #00d4ff;
-  --cyan2:   #00a8cc;
-  --cyan-dim:rgba(0,212,255,.12);
-  --cyan-glo:rgba(0,212,255,.25);
-  --sky:     #7dd3fc;
-  --text:    #e2eaf4;
-  --text2:   #94a8c0;
-  --text3:   #5a7490;
-  --danger:  #f87171;
-  --warn:    #fbbf24;
-  --green:   #34d399;
+  --bg:#080d14; --surface:#0d1520; --card:#111d2e; --card2:#152236;
+  --border:#1e3050; --border2:#264070;
+  --cyan:#00d4ff; --cyan2:#00a8cc; --cyan-dim:rgba(0,212,255,.12); --cyan-glo:rgba(0,212,255,.25);
+  --sky:#7dd3fc; --text:#e2eaf4; --text2:#94a8c0; --text3:#5a7490;
+  --danger:#f87171; --warn:#fbbf24; --green:#34d399; --purple:#a78bfa;
 }
-
 *{box-sizing:border-box;margin:0;padding:0;}
-
-body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:'DM Sans',sans-serif;
-  font-size:16px;
-  min-height:100vh;
-  padding:28px 24px 80px;
-}
-
-body::before{
-  content:'';
-  position:fixed;inset:0;
-  background-image:
-    linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);
-  background-size:40px 40px;
-  pointer-events:none;z-index:0;
-}
-
-.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;min-height:100vh;padding:24px 20px 80px;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+.wrap{position:relative;z-index:1;max-width:1140px;margin:0 auto;}
 
 /* Header */
-header{
-  display:flex;align-items:flex-start;justify-content:space-between;
-  flex-wrap:wrap;gap:16px;
-  margin-bottom:32px;padding-bottom:20px;
-  border-bottom:1px solid var(--border);
-}
-
-.logo h1{
-  font-family:'Share Tech Mono',monospace;
-  font-size:24px;color:var(--cyan);letter-spacing:3px;
-  text-shadow:0 0 24px var(--cyan-glo);
-}
-.logo p{font-size:13px;color:var(--text3);letter-spacing:1.5px;margin-top:4px;text-transform:uppercase;}
-
-.lib-block{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:10px;padding:14px 20px;min-width:230px;
-}
-.lib-row{display:flex;justify-content:space-between;gap:16px;font-size:14px;color:var(--text3);line-height:2.1;}
-.lib-val{font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--cyan);}
+header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid var(--border);}
+.logo h1{font-family:'Share Tech Mono',monospace;font-size:22px;color:var(--cyan);letter-spacing:3px;text-shadow:0 0 20px var(--cyan-glo);}
+.logo p{font-size:12px;color:var(--text3);letter-spacing:1.5px;margin-top:3px;text-transform:uppercase;}
+.lib-block{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 18px;min-width:220px;}
+.lib-row{display:flex;justify-content:space-between;gap:14px;font-size:13px;color:var(--text3);line-height:2;}
+.lib-val{font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--cyan);}
 
 /* Section label */
-.slbl{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;padding-left:2px;}
+.slbl{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;padding-left:2px;}
 
-/* Import panel */
-.import-panel{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:12px;padding:22px 24px;margin-bottom:22px;
-}
-.import-panel h2{font-size:16px;font-weight:600;color:var(--text);margin-bottom:18px;display:flex;align-items:center;gap:10px;}
-.import-panel h2 span{
-  font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);
-  border:1px solid var(--border2);border-radius:4px;padding:2px 8px;letter-spacing:1px;
-}
-.import-row{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;}
+/* Panels */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-bottom:20px;}
+.panel-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.panel-title span{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);border:1px solid var(--border2);border-radius:4px;padding:2px 7px;letter-spacing:1px;}
 
-.field{display:flex;flex-direction:column;gap:7px;}
-.field label{font-size:13px;color:var(--text2);letter-spacing:.3px;font-weight:500;}
+/* Import row */
+.import-row{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:12px;color:var(--text2);font-weight:500;}
+input[type="number"],select{background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:9px 13px;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;}
+input[type="number"]:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,212,255,.1);}
+input[type="number"]{width:115px;}
+.sw{position:relative;}
+.sw::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none;font-size:11px;}
+select{padding-right:30px;}
+.detected-box{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--cyan);background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:9px 13px;min-width:190px;white-space:nowrap;}
+input[type="file"]{display:none;}
 
-input[type="date"],input[type="number"],select{
-  background:var(--surface);border:1px solid var(--border2);border-radius:8px;
-  color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;
-  padding:10px 14px;outline:none;transition:border-color .2s,box-shadow .2s;
-  -webkit-appearance:none;appearance:none;
-}
-input[type="date"]:focus,input[type="number"]:focus,select:focus{
-  border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,212,255,.1);
-}
-input[type="date"]{width:160px;color-scheme:dark;}
-input[type="number"]{width:120px;}
-
-.btn{
-  font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;
-  padding:10px 22px;border-radius:8px;border:none;cursor:pointer;
-  transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;
-}
+/* Buttons */
+.btn{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;padding:9px 20px;border-radius:8px;border:none;cursor:pointer;transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:7px;}
 .btn-primary{background:var(--cyan);color:#060c14;}
-.btn-primary:hover{background:#33ddff;box-shadow:0 0 18px var(--cyan-glo);}
+.btn-primary:hover{background:#33ddff;box-shadow:0 0 16px var(--cyan-glo);}
 .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2);}
 .btn-ghost:hover{border-color:var(--cyan);color:var(--cyan);}
-.btn-danger{background:transparent;color:var(--danger);border:1px solid rgba(248,113,113,.35);}
+.btn-danger{background:transparent;color:var(--danger);border:1px solid rgba(248,113,113,.3);}
 .btn-danger:hover{background:rgba(248,113,113,.08);}
-.btn-sm{font-size:14px;padding:8px 16px;}
-#fileInput{display:none;}
+.btn-warn{background:transparent;color:var(--warn);border:1px solid rgba(251,191,36,.3);}
+.btn-warn:hover{background:rgba(251,191,36,.08);}
+.btn-sm{font-size:13px;padding:7px 14px;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 
-/* Budget row */
-.budget-row{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:12px;padding:20px 24px;margin-bottom:24px;
-  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
-}
-.bar-wrap{flex:1;min-width:220px;}
-.bar-meta{display:flex;justify-content:space-between;font-size:14px;color:var(--text3);margin-bottom:8px;}
-.bar-meta .spent{color:var(--cyan);font-weight:600;}
-.bar-meta .alloc{color:var(--sky);}
-.bar-track{background:var(--surface);border-radius:6px;height:13px;overflow:hidden;border:1px solid var(--border);}
-.bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--cyan2),var(--cyan));transition:width .6s,background .3s;box-shadow:0 0 10px rgba(0,212,255,.3);}
-.bar-fill.bwarn{background:linear-gradient(90deg,#d97706,var(--warn));box-shadow:0 0 10px rgba(251,191,36,.3);}
-.bar-fill.bdang{background:linear-gradient(90deg,#dc2626,var(--danger));box-shadow:0 0 10px rgba(248,113,113,.3);}
-.bar-pct{font-family:'Share Tech Mono',monospace;font-size:24px;color:var(--cyan);min-width:68px;text-align:right;}
-.bar-pct.bwarn{color:var(--warn);}
-.bar-pct.bdang{color:var(--danger);}
+/* Semester toggle */
+.sem-toggle{display:flex;gap:0;border:1px solid var(--border2);border-radius:8px;overflow:hidden;}
+.sem-btn{padding:7px 18px;font-size:13px;font-weight:600;background:transparent;color:var(--text3);border:none;cursor:pointer;transition:all .2s;}
+.sem-btn.active{background:var(--cyan);color:#060c14;}
 
-/* Cards */
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:28px;}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 22px;position:relative;overflow:hidden;transition:border-color .2s;}
-.card:hover{border-color:var(--border2);}
+/* Budget bars */
+.budget-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;}
+.budget-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+.bc-label{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
+.bc-nums{display:flex;justify-content:space-between;font-size:12px;color:var(--text3);margin-bottom:6px;}
+.bc-spent{color:var(--cyan);font-weight:600;}
+.bc-budget{color:var(--sky);}
+.bar-track{background:var(--surface);border-radius:5px;height:10px;overflow:hidden;border:1px solid var(--border);}
+.bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--cyan2),var(--cyan));transition:width .6s,background .3s;box-shadow:0 0 8px rgba(0,212,255,.3);}
+.bar-fill.bw{background:linear-gradient(90deg,#d97706,var(--warn));box-shadow:0 0 8px rgba(251,191,36,.3);}
+.bar-fill.bd{background:linear-gradient(90deg,#dc2626,var(--danger));box-shadow:0 0 8px rgba(248,113,113,.3);}
+.bc-footer{display:flex;justify-content:space-between;margin-top:6px;font-size:12px;}
+.bc-pct{font-family:'Share Tech Mono',monospace;font-size:18px;color:var(--cyan);font-weight:700;}
+.bc-pct.bw{color:var(--warn);}
+.bc-pct.bd{color:var(--danger);}
+.bc-rem{font-size:12px;color:var(--text3);margin-top:3px;}
+
+/* Projection strip */
+.proj-strip{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;}
+.proj-item{text-align:center;}
+.proj-lbl{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
+.proj-val{font-family:'Share Tech Mono',monospace;font-size:20px;color:var(--cyan);}
+.proj-val.warn{color:var(--warn);}
+.proj-val.danger{color:var(--danger);}
+.proj-val.ok{color:var(--green);}
+.proj-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+
+/* Summary cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-bottom:20px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s;}
+.card:hover{border-color:var(--border2);transform:translateY(-2px);}
 .card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
-.card.cc::after{background:var(--cyan);box-shadow:0 0 10px var(--cyan-glo);}
+.card.cc::after{background:var(--cyan);box-shadow:0 0 8px var(--cyan-glo);}
 .card.cs::after{background:var(--sky);}
 .card.cg::after{background:var(--green);}
 .card.cw::after{background:var(--warn);}
+.card.cp::after{background:var(--purple);}
 .card.cm::after{background:var(--border2);}
-.card-lbl{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;font-weight:500;}
-.card-val{font-family:'Share Tech Mono',monospace;font-size:28px;line-height:1;}
+.card-lbl{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;font-weight:500;}
+.card-val{font-family:'Share Tech Mono',monospace;font-size:26px;line-height:1;}
 .card.cc .card-val{color:var(--cyan);}
 .card.cs .card-val{color:var(--sky);}
 .card.cg .card-val{color:var(--green);}
 .card.cw .card-val{color:var(--warn);}
-.card-sub{font-size:14px;color:var(--text3);margin-top:7px;}
+.card.cp .card-val{color:var(--purple);}
+.card-sub{font-size:13px;color:var(--text3);margin-top:5px;}
+.card-sub2{font-size:11px;color:var(--text3);margin-top:2px;}
 
-/* Tables shared */
-.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
-.tbl-head{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
-.tbl-title{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);font-weight:500;}
+/* Tooltip */
+.tooltip{position:fixed;background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;min-width:220px;max-width:300px;z-index:2000;pointer-events:none;opacity:0;transition:opacity .15s;box-shadow:0 8px 32px rgba(0,0,0,.8);}
+.tooltip.show{opacity:1;}
+.tt-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:6px;}
+.tt-row{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--text3);line-height:1.9;}
+.tt-val{font-family:'Share Tech Mono',monospace;color:var(--cyan);font-size:12px;}
+.tt-val.g{color:var(--green);}
+.tt-val.w{color:var(--warn);}
+.tt-val.d{color:var(--danger);}
+.tt-divider{border-top:1px solid var(--border);margin:6px 0;}
+.tt-month{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);line-height:1.8;}
+.tt-month .m-hrs{font-family:'Share Tech Mono',monospace;color:var(--sky);font-size:11px;}
+.tt-month .m-zero{color:var(--border2);}
+
+/* Tables */
+.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;}
+.tbl-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.tbl-title{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);font-weight:500;}
 table{width:100%;border-collapse:collapse;}
-thead th{background:var(--surface);font-size:13px;letter-spacing:.8px;text-transform:uppercase;color:var(--text2);padding:13px 22px;text-align:left;font-weight:600;border-bottom:1px solid var(--border);}
+thead th{background:var(--surface);font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--text2);padding:11px 20px;text-align:left;font-weight:600;border-bottom:1px solid var(--border);}
 thead th.r{text-align:right;}
 tbody tr{border-bottom:1px solid var(--border);transition:background .15s;}
 tbody tr:last-child{border-bottom:none;}
 tbody tr:hover{background:rgba(0,212,255,.025);}
-tbody td{padding:15px 22px;font-size:15px;color:var(--text);}
-tbody td.r{text-align:right;font-family:'Share Tech Mono',monospace;font-size:15px;}
-tfoot td{padding:15px 22px;font-size:15px;font-weight:700;border-top:2px solid var(--border2);}
+tbody td{padding:13px 20px;font-size:14px;}
+tbody td.r{text-align:right;font-family:'Share Tech Mono',monospace;font-size:13px;}
+tfoot td{padding:13px 20px;font-size:14px;font-weight:700;border-top:2px solid var(--border2);}
 tfoot td.r{text-align:right;font-family:'Share Tech Mono',monospace;}
+.worker-name-cell{cursor:pointer;position:relative;}
+.worker-name-cell:hover .wname{text-decoration:underline;text-decoration-color:var(--cyan);text-underline-offset:3px;}
+.wname{font-weight:600;font-size:14px;}
+.w-inactive{opacity:.45;}
 
-/* Monthly */
-.mlbl{font-weight:600;font-size:15px;}
-.mrange{font-size:13px;color:var(--text3);margin-top:3px;}
-.cumbar-wrap{display:flex;align-items:center;gap:10px;}
-.cumbar-track{background:var(--surface);border-radius:3px;height:7px;width:80px;overflow:hidden;border:1px solid var(--border);}
-.cumbar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--cyan2),var(--cyan));transition:width .4s;}
-
-/* Worker table */
-.role-badge{
-  display:inline-block;font-size:12px;letter-spacing:.5px;
-  padding:3px 11px;border-radius:20px;margin-left:10px;
-  font-weight:700;vertical-align:middle;cursor:pointer;transition:all .2s;text-transform:uppercase;
-}
-.btc  {background:rgba(0,212,255,.1); color:var(--cyan); border:1px solid rgba(0,212,255,.3);}
-.bsc  {background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.3);}
-.bboth{background:rgba(251,191,36,.1);color:var(--warn); border:1px solid rgba(251,191,36,.3);}
+/* Badges */
+.role-badge{display:inline-block;font-size:11px;letter-spacing:.5px;padding:3px 10px;border-radius:20px;margin-left:8px;font-weight:700;vertical-align:middle;cursor:pointer;transition:all .2s;text-transform:uppercase;}
+.btc{background:rgba(0,212,255,.1);color:var(--cyan);border:1px solid rgba(0,212,255,.3);}
+.bsc{background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.3);}
+.bboth{background:rgba(251,191,36,.1);color:var(--warn);border:1px solid rgba(251,191,36,.3);}
 .bnone{background:rgba(90,116,144,.1);color:var(--text3);border:1px solid rgba(90,116,144,.25);}
-.btc:hover  {background:rgba(0,212,255,.2);}
-.bsc:hover  {background:rgba(52,211,153,.2);}
+.btc:hover{background:rgba(0,212,255,.2);}
+.bsc:hover{background:rgba(52,211,153,.2);}
 .bboth:hover{background:rgba(251,191,36,.2);}
 .bnone:hover{background:rgba(90,116,144,.2);}
+.new-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;margin-left:6px;background:rgba(248,113,113,.15);color:var(--danger);border:1px solid rgba(248,113,113,.3);font-weight:700;vertical-align:middle;}
 
-.mb-wrap{display:flex;align-items:center;gap:10px;}
-.mb-track{background:var(--surface);border-radius:3px;height:6px;width:80px;overflow:hidden;border:1px solid var(--border);}
+/* Mini bar */
+.mb-wrap{display:flex;align-items:center;gap:8px;}
+.mb-track{background:var(--surface);border-radius:3px;height:5px;width:70px;overflow:hidden;border:1px solid var(--border);}
 .mb-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--cyan2),var(--cyan));}
 .vhrs{color:var(--sky);}
 .vcost{color:var(--cyan);}
+.vavg{color:var(--text3);font-size:11px;}
 
-/* Toolbar */
-.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
-.tr-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.sw{position:relative;}
-.sw::after{content:'▾';position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none;font-size:12px;}
-select{padding-right:32px;}
+/* Monthly table extras */
+.mlbl{font-weight:600;font-size:14px;}
+.mrange{font-size:12px;color:var(--text3);margin-top:2px;}
+.msem{font-size:10px;padding:2px 7px;border-radius:10px;margin-left:6px;font-weight:700;vertical-align:middle;}
+.msem-f{background:rgba(167,139,250,.15);color:var(--purple);border:1px solid rgba(167,139,250,.3);}
+.msem-s{background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.3);}
+.cumbar-wrap{display:flex;align-items:center;gap:8px;}
+.cumbar-track{background:var(--surface);border-radius:3px;height:6px;width:70px;overflow:hidden;border:1px solid var(--border);}
+.cumbar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--cyan2),var(--cyan));}
 
 /* Legend */
-.legend{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:18px;font-size:14px;color:var(--text3);}
-.leg{display:flex;align-items:center;gap:7px;}
-.ldot{width:10px;height:10px;border-radius:50%;}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;font-size:13px;color:var(--text3);}
+.leg{display:flex;align-items:center;gap:6px;}
+.ldot{width:9px;height:9px;border-radius:50%;}
+
+/* Toolbar */
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.tr-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 
 /* Empty */
-.empty{text-align:center;padding:60px 20px;color:var(--text3);}
-.empty-icon{font-size:44px;margin-bottom:14px;opacity:.4;}
-.empty p{font-size:15px;line-height:1.7;}
+.empty{text-align:center;padding:50px 20px;color:var(--text3);}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:.4;}
+.empty p{font-size:14px;line-height:1.7;}
 
 /* Modal */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s;}
 .overlay.open{opacity:1;pointer-events:all;}
-.modal{background:var(--card2);border:1px solid var(--border2);border-radius:16px;padding:30px;width:90%;max-width:400px;box-shadow:0 24px 80px rgba(0,0,0,.9);}
-.modal h3{font-size:18px;color:var(--text);margin-bottom:5px;}
-.modal .msub{font-size:14px;color:var(--text3);margin-bottom:22px;}
-.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;}
-.ropt{padding:16px 12px;border-radius:10px;border:2px solid var(--border);cursor:pointer;text-align:center;transition:all .2s;}
+.modal{background:var(--card2);border:1px solid var(--border2);border-radius:14px;padding:28px;width:90%;max-width:400px;box-shadow:0 24px 80px rgba(0,0,0,.9);}
+.modal h3{font-size:17px;color:var(--text);margin-bottom:4px;}
+.modal .msub{font-size:13px;color:var(--text3);margin-bottom:20px;}
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.ropt{padding:15px 10px;border-radius:10px;border:2px solid var(--border);cursor:pointer;text-align:center;transition:all .2s;}
 .ropt:hover{border-color:var(--cyan2);}
 .ropt.sel{border-color:var(--cyan);background:rgba(0,212,255,.06);}
-.ropt-icon{font-size:24px;margin-bottom:6px;}
-.ropt-lbl{font-size:14px;font-weight:600;color:var(--text);}
-.ropt-sub{font-size:12px;color:var(--text3);margin-top:3px;}
+.ropt-icon{font-size:22px;margin-bottom:5px;}
+.ropt-lbl{font-size:13px;font-weight:600;color:var(--text);}
+.ropt-sub{font-size:11px;color:var(--text3);margin-top:2px;}
 .modal-btns{display:flex;gap:10px;justify-content:flex-end;}
 
 /* Toast */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--card2);border:1px solid var(--cyan);border-radius:10px;padding:13px 20px;font-size:14px;color:var(--cyan);font-family:'Share Tech Mono',monospace;box-shadow:0 4px 24px rgba(0,0,0,.7);transform:translateY(80px);opacity:0;transition:all .3s;z-index:1001;max-width:300px;}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--card2);border:1px solid var(--cyan);border-radius:10px;padding:12px 18px;font-size:13px;color:var(--cyan);font-family:'Share Tech Mono',monospace;box-shadow:0 4px 20px rgba(0,0,0,.7);transform:translateY(80px);opacity:0;transition:all .3s;z-index:1001;max-width:280px;}
 .toast.show{transform:translateY(0);opacity:1;}
 
-@media(max-width:640px){
-  .cards{grid-template-columns:1fr 1fr;}
-  .tr-right{margin-left:0;width:100%;}
-  .import-row{flex-direction:column;align-items:flex-start;}
-}
+/* Unassigned alert */
+.unassigned-alert{background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.25);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--danger);display:none;align-items:center;gap:10px;}
+.unassigned-alert.show{display:flex;}
+
+@media(max-width:640px){.cards{grid-template-columns:1fr 1fr;}.budget-grid{grid-template-columns:1fr;}.tr-right{margin-left:0;width:100%;}}
 </style>
 </head>
 <body>
 <div class="wrap">
 
+<!-- Header -->
 <header>
   <div class="logo">
     <h1>OARS · HOURS TRACKER</h1>
@@ -253,12 +232,19 @@ select{padding-right:32px;}
   </div>
 </header>
 
-<!-- Import -->
-<div class="import-panel">
-  <h2>Import Workday Export <span>EXCEL .xlsx</span></h2>
+<!-- Import Panel -->
+<div class="panel">
+  <div class="panel-title">Import Workday Export <span>EXCEL .xlsx</span></div>
   <div class="import-row">
     <div class="field">
-      <label>Month Label <span style="font-size:11px;color:var(--text3);font-weight:400">(auto-detected, adjust if needed)</span></label>
+      <label>Semester</label>
+      <div class="sem-toggle">
+        <button class="sem-btn active" id="semF" onclick="setSem('Fall')">Fall</button>
+        <button class="sem-btn" id="semS" onclick="setSem('Spring')">Spring</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Month <span style="font-size:11px;color:var(--text3)">(auto-detected)</span></label>
       <div class="sw">
         <select id="monthLabel">
           <option value="September">September</option>
@@ -274,71 +260,110 @@ select{padding-right:32px;}
         </select>
       </div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:6px">
-      <label style="font-size:13px;color:var(--text3);font-weight:500">Detected Range</label>
-      <div id="detectedRange" style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--cyan);background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;min-width:200px">
-        — select a file —
-      </div>
+    <div class="field">
+      <label>Detected Range</label>
+      <div class="detected-box" id="detectedRange">— select a file —</div>
     </div>
-    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">⬆&nbsp;Import Excel</button>
+    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">⬆ Import Excel</button>
     <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFile(event)">
   </div>
 </div>
-<!-- Hidden date fields still used internally -->
-<input type="date" id="startDate" style="display:none">
-<input type="date" id="endDate" style="display:none">
 
-<!-- Budget -->
-<div class="budget-row">
-  <div class="field">
-    <label style="font-size:13px;color:var(--text2);font-weight:500;">Semester Budget</label>
-    <input type="number" id="budgetInput" value="5818" min="0" step="100">
-  </div>
-  <div class="bar-wrap">
-    <div class="bar-meta">
-      <span class="spent">SPENT: <span id="spentLbl">$0.00</span></span>
-      <span class="alloc">BUDGET: <span id="budgetLbl">$5,818</span></span>
-    </div>
-    <div class="bar-track"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
-  </div>
-  <div class="bar-pct" id="barPct">0%</div>
-  <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export</button>
-  <button class="btn btn-danger btn-sm" onclick="clearAll()">✕ Clear All</button>
+<!-- Unassigned alert -->
+<div class="unassigned-alert" id="unassignedAlert">
+  ⚠ <span id="unassignedMsg"></span>
+  <button class="btn btn-sm btn-danger" style="margin-left:auto" onclick="scrollToUnassigned()">View</button>
 </div>
 
-<!-- Cards -->
-<div class="slbl">Summary</div>
+<!-- Budget Section -->
+<div class="slbl">Annual Budget</div>
+<div class="budget-grid">
+  <div class="budget-card">
+    <div class="bc-label">Annual Budget</div>
+    <div class="bc-nums"><span class="bc-spent">Spent: <span id="annSpent">$0</span></span><span class="bc-budget">Budget: <input type="number" id="budgetInput" value="12000" min="0" step="500" style="width:90px;font-size:13px;padding:3px 7px;display:inline-block;"></span></div>
+    <div class="bar-track"><div class="bar-fill" id="annBar" style="width:0%"></div></div>
+    <div class="bc-footer"><span class="bc-pct" id="annPct">0%</span><span class="bc-rem" id="annRem"></span></div>
+  </div>
+  <div class="budget-card">
+    <div class="bc-label">Fall Semester <span style="font-size:10px;color:var(--text3)">(Sept–Dec)</span></div>
+    <div class="bc-nums"><span class="bc-spent">Spent: <span id="fallSpent">$0</span></span><span class="bc-budget">Alloc: <span id="fallAlloc">$0</span></span></div>
+    <div class="bar-track"><div class="bar-fill" id="fallBar" style="width:0%"></div></div>
+    <div class="bc-footer"><span class="bc-pct" id="fallPct">—</span><span class="bc-rem" id="fallRem"></span></div>
+  </div>
+  <div class="budget-card">
+    <div class="bc-label">Spring Semester <span style="font-size:10px;color:var(--text3)">(Jan–May)</span></div>
+    <div class="bc-nums"><span class="bc-spent">Spent: <span id="sprSpent">$0</span></span><span class="bc-budget">Alloc: <span id="sprAlloc">$0</span></span></div>
+    <div class="bar-track"><div class="bar-fill" id="sprBar" style="width:0%"></div></div>
+    <div class="bc-footer"><span class="bc-pct" id="sprPct">—</span><span class="bc-rem" id="sprRem"></span></div>
+  </div>
+</div>
+
+<!-- Projection Strip -->
+<div class="slbl">Annual Projection <span style="font-size:10px;color:var(--text3);letter-spacing:0">based on imported periods</span></div>
+<div class="proj-strip" id="projStrip">
+  <div class="proj-item"><div class="proj-lbl">Periods Imported</div><div class="proj-val" id="projPeriods">0</div><div class="proj-sub">of ~8 total</div></div>
+  <div class="proj-item"><div class="proj-lbl">Avg Monthly Burn</div><div class="proj-val" id="projAvg">—</div><div class="proj-sub">per import period</div></div>
+  <div class="proj-item"><div class="proj-lbl">Projected Annual</div><div class="proj-val" id="projAnn">—</div><div class="proj-sub">at current pace</div></div>
+  <div class="proj-item"><div class="proj-lbl">Budget Gap</div><div class="proj-val" id="projGap">—</div><div class="proj-sub">over / under</div></div>
+  <div class="proj-item"><div class="proj-lbl">TC Share</div><div class="proj-val" id="projTC">—</div><div class="proj-sub">of total spend</div></div>
+  <div class="proj-item"><div class="proj-lbl">Scribe Share</div><div class="proj-val" id="projSC">—</div><div class="proj-sub">of total spend</div></div>
+</div>
+
+<!-- Summary Cards -->
+<div class="slbl">Summary <span style="font-size:10px;letter-spacing:0;color:var(--text3)">· hover cards for breakdown · click to filter</span></div>
 <div class="cards">
-  <div class="card cc"><div class="card-lbl">Total Hours</div><div class="card-val" id="cTotH">0.00</div><div class="card-sub" id="cTotSub">all workers</div></div>
-  <div class="card cs"><div class="card-lbl">Total Cost</div><div class="card-val" id="cTotC">$0.00</div><div class="card-sub">@ $10 / hr</div></div>
-  <div class="card cc"><div class="card-lbl">Testing Center Hrs</div><div class="card-val" id="cTCH">0.00</div><div class="card-sub" id="cTCC">$0.00</div></div>
-  <div class="card cg"><div class="card-lbl">Scribe Hrs</div><div class="card-val" id="cSCH">0.00</div><div class="card-sub" id="cSCC">$0.00</div></div>
-  <div class="card cw"><div class="card-lbl">Both Roles Hrs</div><div class="card-val" id="cBH">0.00</div><div class="card-sub" id="cBSub">split not determinable</div></div>
-  <div class="card cm"><div class="card-lbl">Workers</div><div class="card-val" id="cWrk">0</div><div class="card-sub" id="cWrkSub">imported</div></div>
+  <div class="card cc" onclick="setFilter('all')" onmouseenter="showCardTT(event,'all')" onmouseleave="hideTT()">
+    <div class="card-lbl">Total Hours</div><div class="card-val" id="cTotH">0.00</div><div class="card-sub" id="cTotC">$0.00</div><div class="card-sub2" id="cTotAvg"></div>
+  </div>
+  <div class="card cs" onclick="setFilter('all')" onmouseenter="showCardTT(event,'cost')" onmouseleave="hideTT()">
+    <div class="card-lbl">Total Cost</div><div class="card-val" id="cTotCost">$0.00</div><div class="card-sub">@ $10 / hr</div><div class="card-sub2" id="cTotCostAvg"></div>
+  </div>
+  <div class="card cc" onclick="setFilter('TC')" onmouseenter="showCardTT(event,'TC')" onmouseleave="hideTT()">
+    <div class="card-lbl">Testing Center</div><div class="card-val" id="cTCH">0.00</div><div class="card-sub" id="cTCC">$0.00</div><div class="card-sub2" id="cTCAvg"></div>
+  </div>
+  <div class="card cg" onclick="setFilter('SC')" onmouseenter="showCardTT(event,'SC')" onmouseleave="hideTT()">
+    <div class="card-lbl">Scribe</div><div class="card-val" id="cSCH">0.00</div><div class="card-sub" id="cSCC">$0.00</div><div class="card-sub2" id="cSCAvg"></div>
+  </div>
+  <div class="card cw" onclick="setFilter('BOTH')" onmouseenter="showCardTT(event,'BOTH')" onmouseleave="hideTT()">
+    <div class="card-lbl">Both Roles</div><div class="card-val" id="cBH">0.00</div><div class="card-sub" id="cBC">$0.00</div><div class="card-sub2">Split not determinable</div>
+  </div>
+  <div class="card cm" onclick="setFilter('NONE')" onmouseenter="showCardTT(event,'NONE')" onmouseleave="hideTT()">
+    <div class="card-lbl">Unassigned</div><div class="card-val" id="cUnH">0.00</div><div class="card-sub" id="cUnC">$0.00</div><div class="card-sub2" id="cUnNote"></div>
+  </div>
 </div>
 
-<!-- Monthly -->
+<!-- Monthly Table -->
 <div class="slbl">Monthly Running Total</div>
-<div class="tbl-wrap" style="margin-bottom:24px;">
+<div class="tbl-wrap">
   <div class="tbl-head">
-    <div class="tbl-title">Hours &amp; Cost by Period — Cumulative</div>
-    <button class="btn btn-danger btn-sm" id="deleteMonthBtn" style="display:none" onclick="deleteSelectedMonth()">✕ Remove Selected Month</button>
+    <div class="tbl-title">Period Breakdown — Cumulative</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-sm btn-danger" id="delMonthBtn" style="display:none" onclick="deleteMonth()">✕ Remove</button>
+    </div>
   </div>
   <div id="monthlyTable"><div class="empty"><div class="empty-icon">📅</div><p>No data yet. Import your first Workday export above.</p></div></div>
 </div>
 
-<!-- Worker detail -->
-<div class="slbl" style="margin-top:24px;">Worker Detail</div>
+<!-- Worker Detail -->
+<div class="slbl" style="margin-top:4px" id="workerAnchor">Worker Detail <span style="font-size:10px;letter-spacing:0;color:var(--text3)">· hover name for history · click badge to assign role</span></div>
+<div class="legend">
+  <div class="leg"><div class="ldot" style="background:var(--cyan)"></div>Testing Center</div>
+  <div class="leg"><div class="ldot" style="background:var(--green)"></div>Scribe</div>
+  <div class="leg"><div class="ldot" style="background:var(--warn)"></div>Both</div>
+  <div class="leg"><div class="ldot" style="background:var(--text3)"></div>Unassigned</div>
+  <div class="leg"><div class="ldot" style="background:var(--danger)"></div>New — needs assignment</div>
+</div>
 <div class="toolbar">
-  <div class="legend">
-    <div class="leg"><div class="ldot" style="background:var(--cyan)"></div>Testing Center</div>
-    <div class="leg"><div class="ldot" style="background:var(--green)"></div>Scribe</div>
-    <div class="leg"><div class="ldot" style="background:var(--warn)"></div>Both</div>
-    <div class="leg"><div class="ldot" style="background:var(--text3)"></div>Unassigned</div>
-    <div class="leg" style="font-style:italic;font-size:13px">· Click badge to assign</div>
+  <div class="btn-row">
+    <button class="btn btn-ghost btn-sm" onclick="exportReport()">⬇ Export Report</button>
+    <button class="btn btn-warn btn-sm" onclick="exportState()">💾 Save State</button>
+    <button class="btn btn-ghost btn-sm" onclick="document.getElementById('stateInput').click()">📂 Load State</button>
+    <input type="file" id="stateInput" accept=".json" style="display:none" onchange="importState(event)">
+    <button class="btn btn-ghost btn-sm" onclick="exportYearEnd()">📊 Year-End Report</button>
+    <button class="btn btn-danger btn-sm" onclick="clearAll()">✕ Clear All</button>
   </div>
   <div class="tr-right">
-    <label style="font-size:14px;color:var(--text3)">Filter:</label>
+    <label style="font-size:13px;color:var(--text3)">Filter:</label>
     <div class="sw"><select id="roleFilter" onchange="render()">
       <option value="all">All Workers</option>
       <option value="TC">Testing Center</option>
@@ -348,18 +373,20 @@ select{padding-right:32px;}
     </select></div>
   </div>
 </div>
-
-<div class="tbl-wrap">
+<div class="tbl-wrap" id="workerWrap">
   <div class="tbl-head">
-    <div class="tbl-title">Worker Breakdown — Most Recent Import</div>
-    <div style="font-size:13px;color:var(--text3)">Click a badge to assign role</div>
+    <div class="tbl-title">All Workers — Cumulative Across All Imports</div>
+    <div style="font-size:12px;color:var(--text3)">Hover name · Click badge to assign</div>
   </div>
   <div id="workerTable"><div class="empty"><div class="empty-icon">👤</div><p>No workers imported yet.</p></div></div>
 </div>
 
-</div>
+</div><!-- /wrap -->
 
-<!-- Modal -->
+<!-- Tooltip -->
+<div class="tooltip" id="tooltip"></div>
+
+<!-- Role Modal -->
 <div class="overlay" id="overlay" onclick="closeModal(event)">
   <div class="modal">
     <h3 id="modalName">Assign Role</h3>
@@ -381,309 +408,310 @@ select{padding-right:32px;}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const KEY = 'oars_tracker_v2';
-let S = { months:[], roles:{}, budget:5818, prevSnapshot:null };
-let _mw=null,_pr=null,_selMonth=null;
+// ── Constants ──────────────────────────────────────────────────────────────
+const KEY = 'oars_tracker_v3';
+const RATE = 10;
+const FALL_MONTHS  = ['September','October','November','December'];
+const SPRING_MONTHS= ['January','February','March','April','May'];
+const ALL_MONTHS   = [...FALL_MONTHS,...SPRING_MONTHS];
+const TOTAL_PERIODS = 8; // typical full year
 
+// ── State ──────────────────────────────────────────────────────────────────
+let S = {
+  months:[],      // [{label,semester,startDate,endDate,workers:[{name,hours,empType}],importedAt}]
+  roles:{},       // {name:'TC'|'SC'|'BOTH'|'NONE'}
+  newFlags:{},    // {name:true} — flagged as newly detected
+  budget:12000,
+  prevSnapshot:null,
+  currentSem:'Fall'
+};
+
+let _mw=null, _pr=null, _selMonth=null, _activeFilter='all';
+
+// ── Persistence ────────────────────────────────────────────────────────────
 function load(){try{const r=localStorage.getItem(KEY);if(r)S={...S,...JSON.parse(r)};}catch(e){}}
 function save(){localStorage.setItem(KEY,JSON.stringify(S));}
+
+function exportState(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='OARS_Tracker_State_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  showToast('💾 State saved to JSON');
+}
+
+function importState(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      S={...S,...data};
+      save();render();
+      showToast('✓ State loaded — '+S.months.length+' periods restored');
+    }catch(err){showToast('⚠ Invalid state file');}
+    e.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+// ── Import ─────────────────────────────────────────────────────────────────
+function setSem(s){
+  S.currentSem=s;
+  document.getElementById('semF').classList.toggle('active',s==='Fall');
+  document.getElementById('semS').classList.toggle('active',s==='Spring');
+  // auto-set month dropdown to first of semester
+  const sl=document.getElementById('monthLabel');
+  sl.value=s==='Fall'?'September':'January';
+}
 
 function handleFile(e){
   const file=e.target.files[0];if(!file)return;
   const ml=document.getElementById('monthLabel').value;
+  const sem=S.currentSem;
   const reader=new FileReader();
   reader.onload=ev=>{
     try{
       const wb=XLSX.read(ev.target.result,{type:'binary'});
       const ws=wb.Sheets[wb.SheetNames[0]];
       const rows=XLSX.utils.sheet_to_json(ws,{header:1});
-      const workers=[];
       if(!rows.length){showToast('⚠ Empty file');e.target.value='';return;}
+
       const header=rows[0].map(c=>String(c||'').trim());
       const workerCol=header.findIndex(h=>/^worker$/i.test(h));
       const totalCol=header.findIndex(h=>/total hours/i.test(h));
       const empTypeCol=header.findIndex(h=>/employee type/i.test(h));
 
-      // Auto-detect date range from sub-period column headers (MM/DD/YYYY format)
+      // Auto-detect dates
       const datePat=/^(\d{2}\/\d{2}\/\d{4})/;
-      const dateCols=header.filter(h=>datePat.test(h));
-      if(dateCols.length>=2){
+      const dateCols=header.filter(h=>datePat.test(String(h)));
+      let startDate='',endDate='';
+      if(dateCols.length>=1){
         const toISO=s=>{const[mo,d,y]=s.match(datePat)[1].split('/');return `${y}-${mo}-${d}`;};
-        const firstDate=toISO(dateCols[0]);
-        const lastDate=toISO(dateCols[dateCols.length-1]);
-        document.getElementById('startDate').value=firstDate;
-        document.getElementById('endDate').value=lastDate;
-        // Show detected range
+        startDate=toISO(String(dateCols[0]));
+        endDate=toISO(String(dateCols[dateCols.length-1]));
         const fmt2=iso=>new Date(iso+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-        document.getElementById('detectedRange').textContent=fmt2(firstDate)+' – '+fmt2(lastDate);
-        // Auto-select month label
-        const mo=new Date(firstDate+'T00:00:00').toLocaleString('en-US',{month:'long'});
+        document.getElementById('detectedRange').textContent=fmt2(startDate)+' – '+fmt2(endDate);
+        // auto month label
+        const mo=new Date(startDate+'T00:00:00').toLocaleString('en-US',{month:'long'});
         const sl=document.getElementById('monthLabel');
         if([...sl.options].some(o=>o.value===mo))sl.value=mo;
+        // auto semester
+        if(FALL_MONTHS.includes(mo)){setSem('Fall');S.currentSem='Fall';}
+        else if(SPRING_MONTHS.includes(mo)){setSem('Spring');S.currentSem='Spring';}
       }
 
+      // Parse workers
+      const workers=[];
       if(workerCol>=0&&totalCol>=0){
         for(let i=1;i<rows.length;i++){
           const row=rows[i];
           const name=String(row[workerCol]||'').trim();
           const hrs=parseFloat(row[totalCol]);
           const empType=empTypeCol>=0?String(row[empTypeCol]||'').trim():'Student';
-          if(!name||isNaN(hrs)||name.toLowerCase()==='total')continue;
+          if(!name||isNaN(hrs)||/^total/i.test(name)||hrs===0)continue;
           workers.push({name,hours:hrs,empType});
         }
       }else{
         let found=false;
         for(const row of rows){
           if(!found){const l=row.map(c=>String(c||'').toLowerCase());if(l.some(c=>c.includes('worker'))&&l.some(c=>c.includes('hour'))){found=true;continue;}}
-          else{const name=String(row[0]||'').trim();const hrs=parseFloat(row[1]);if(name&&!isNaN(hrs)&&name.toLowerCase()!=='total')workers.push({name,hours:hrs,empType:'Student'});}
+          else{const name=String(row[0]||'').trim();const hrs=parseFloat(row[1]);if(name&&!isNaN(hrs)&&!/^total/i.test(name)&&hrs!==0)workers.push({name,hours:hrs,empType:'Student'});}
         }
       }
       if(!workers.length){showToast('⚠ No worker rows found');e.target.value='';return;}
-      // snapshot
-      const all=S.months.flatMap(m=>m.workers);
-      if(all.length){const th=all.reduce((s,w)=>s+w.hours,0);S.prevSnapshot={totalHrs:th,totalCost:th*10};}
-      // add/replace — read dates after auto-detection filled the hidden fields
-      const start=document.getElementById('startDate').value;
-      const end=document.getElementById('endDate').value;
-      const idx=S.months.findIndex(m=>m.label===ml&&m.startDate===start);
-      const entry={label:ml,startDate:start,endDate:end,workers,importedAt:new Date().toISOString()};
+
+      // Snapshot prev
+      const allW=allWorkers();
+      if(allW.length){const th=allW.reduce((s,w)=>s+w.hours,0);S.prevSnapshot={totalHrs:th,totalCost:th*RATE};}
+
+      // Detect new names
+      const newNames=[];
+      workers.forEach(w=>{
+        if(!S.roles[w.name]){
+          S.roles[w.name]='NONE';
+          S.newFlags[w.name]=true;
+          newNames.push(w.name);
+        }
+      });
+
+      // Add/replace month
+      const label=document.getElementById('monthLabel').value;
+      const idx=S.months.findIndex(m=>m.label===label&&m.semester===S.currentSem);
+      const entry={label,semester:S.currentSem,startDate,endDate,workers,importedAt:new Date().toISOString()};
       if(idx>=0)S.months[idx]=entry;else S.months.push(entry);
-      S.months.sort((a,b)=>a.startDate.localeCompare(b.startDate));
-      workers.forEach(w=>{if(!S.roles[w.name])S.roles[w.name]='NONE';});
-      save();render();showToast('✓ Imported '+workers.length+' workers for '+ml);
-    }catch(err){showToast('⚠ Error: '+err.message);}
+      S.months.sort((a,b)=>{
+        const ai=ALL_MONTHS.indexOf(a.label)+(a.semester==='Spring'?4:0);
+        const bi=ALL_MONTHS.indexOf(b.label)+(b.semester==='Spring'?4:0);
+        return ai-bi;
+      });
+
+      save();render();
+      let msg=`✓ Imported ${workers.length} workers for ${label}`;
+      if(newNames.length)msg+=` · ${newNames.length} new name${newNames.length>1?'s':''} detected`;
+      showToast(msg);
+    }catch(err){showToast('⚠ Error: '+err.message);console.error(err);}
     e.target.value='';
   };
   reader.readAsBinaryString(file);
 }
 
+// ── Data helpers ───────────────────────────────────────────────────────────
+function allWorkers(){
+  // Aggregate all months, sum hours per worker
+  const map={};
+  S.months.forEach(m=>m.workers.forEach(w=>{
+    if(!map[w.name])map[w.name]={name:w.name,hours:0,empType:w.empType,periods:[]};
+    map[w.name].hours+=w.hours;
+    map[w.name].periods.push({label:m.label,semester:m.semester,hours:w.hours});
+  }));
+  return Object.values(map);
+}
+
+function workerMonthHistory(name){
+  // Returns array of {label,semester,hours} for every imported period
+  return S.months.map(m=>{
+    const w=m.workers.find(x=>x.name===name);
+    return {label:m.label,semester:m.semester,hours:w?w.hours:0};
+  });
+}
+
+function semMonths(sem){return S.months.filter(m=>m.semester===sem);}
+
+function semCost(sem){
+  return semMonths(sem).flatMap(m=>m.workers).reduce((s,w)=>s+w.hours,0)*RATE;
+}
+
+function roleCost(role){
+  return allWorkers().filter(w=>role==='BOTH'
+    ? (S.roles[w.name]||'NONE')==='BOTH'
+    : ['TC','BOTH'].includes(S.roles[w.name]||'NONE')&&role==='TC'||
+      ['SC','BOTH'].includes(S.roles[w.name]||'NONE')&&role==='SC')
+    .reduce((s,w)=>s+w.hours,0)*RATE;
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
 function render(){
-  renderLib();renderBudget();renderCards();renderMonthly();renderWorkers();
+  renderLib();renderBudget();renderProjection();renderCards();renderMonthly();renderWorkers();renderUnassigned();
 }
 
 function renderLib(){
   const latest=[...S.months].sort((a,b)=>b.importedAt.localeCompare(a.importedAt))[0];
   if(latest){
     const d=new Date(latest.importedAt);
-    document.getElementById('libDate').textContent=
-      d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' '+
-      d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    s('libDate',d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}));
   }
   if(S.prevSnapshot){
-    document.getElementById('libHrs').textContent=S.prevSnapshot.totalHrs.toFixed(2)+' hrs';
-    document.getElementById('libCost').textContent='$'+fmt(S.prevSnapshot.totalCost);
+    s('libHrs',S.prevSnapshot.totalHrs.toFixed(2)+' hrs');
+    s('libCost','$'+fmt(S.prevSnapshot.totalCost));
   }
-}
-
-function allWorkers(){
-  const map={};
-  S.months.forEach(m=>m.workers.forEach(w=>{map[w.name]=(map[w.name]||0)+w.hours;}));
-  return Object.entries(map).map(([name,hours])=>({name,hours}));
-}
-
-function latestWorkers(){
-  if(!S.months.length)return[];
-  return [...S.months].sort((a,b)=>b.importedAt.localeCompare(a.importedAt))[0].workers;
 }
 
 function renderBudget(){
   const budget=parseFloat(document.getElementById('budgetInput').value)||0;
   S.budget=budget;
-  const tot=allWorkers().reduce((s,w)=>s+w.hours,0)*10;
-  const pct=budget>0?(tot/budget)*100:0;
-  const disp=Math.min(pct,100);
-  const fill=document.getElementById('barFill');
-  const pctEl=document.getElementById('barPct');
-  fill.style.width=disp+'%';
-  fill.className='bar-fill'+(pct>=100?' bdang':pct>=75?' bwarn':'');
-  pctEl.textContent=Math.round(pct)+'%';
-  pctEl.className='bar-pct'+(pct>=100?' bdang':pct>=75?' bwarn':'');
-  document.getElementById('spentLbl').textContent='$'+fmt(tot);
-  document.getElementById('budgetLbl').textContent='$'+budget.toLocaleString('en-US');
+  // Fall is ~16/33 of year, Spring ~17/33
+  const fallAlloc=Math.round(budget*(16/33));
+  const sprAlloc=budget-fallAlloc;
+  const totCost=allWorkers().reduce((sum,w)=>sum+w.hours,0)*RATE;
+  const fallCost=semCost('Fall');
+  const sprCost=semCost('Spring');
+
+  function updateBar(barId,pctId,remId,spentId,allocId,spent,alloc,spentEl,allocEl){
+    const pct=alloc>0?(spent/alloc)*100:0;
+    const disp=Math.min(pct,100);
+    const fill=document.getElementById(barId);
+    const pctEl2=document.getElementById(pctId);
+    fill.style.width=disp+'%';
+    fill.className='bar-fill'+(pct>=100?' bd':pct>=75?' bw':'');
+    pctEl2.textContent=alloc>0?Math.round(pct)+'%':'—';
+    pctEl2.className='bc-pct'+(pct>=100?' bd':pct>=75?' bw':'');
+    document.getElementById(spentEl).textContent='$'+fmt(spent);
+    if(allocEl)document.getElementById(allocEl).textContent='$'+fmt(alloc);
+    const rem=alloc-spent;
+    document.getElementById(remId).textContent=alloc>0?(rem<0?'Over $'+fmt(Math.abs(rem)):'$'+fmt(rem)+' left'):'';
+  }
+
+  updateBar('annBar','annPct','annRem','annSpent',null,totCost,budget,'annSpent',null);
+  document.getElementById('annSpent').textContent='$'+fmt(totCost);
+  updateBar('fallBar','fallPct','fallRem','fallSpent','fallAlloc',fallCost,fallAlloc,'fallSpent','fallAlloc');
+  updateBar('sprBar','sprPct','sprRem','sprSpent','sprAlloc',sprCost,sprAlloc,'sprSpent','sprAlloc');
+
+  // Annual pct
+  const annPct=budget>0?(totCost/budget)*100:0;
+  document.getElementById('annBar').style.width=Math.min(annPct,100)+'%';
+  document.getElementById('annBar').className='bar-fill'+(annPct>=100?' bd':annPct>=75?' bw':'');
+  document.getElementById('annPct').textContent=budget>0?Math.round(annPct)+'%':'—';
+  document.getElementById('annPct').className='bc-pct'+(annPct>=100?' bd':annPct>=75?' bw':'');
+  const annRem=budget-totCost;
+  document.getElementById('annRem').textContent=budget>0?(annRem<0?'Over $'+fmt(Math.abs(annRem)):'$'+fmt(annRem)+' remaining'):'';
+}
+
+function renderProjection(){
+  const n=S.months.length;
+  s('projPeriods',String(n));
+  if(!n){['projAvg','projAnn','projGap','projTC','projSC'].forEach(id=>s(id,'—'));return;}
+  const totCost=allWorkers().reduce((sum,w)=>sum+w.hours,0)*RATE;
+  const avg=totCost/n;
+  const projected=avg*TOTAL_PERIODS;
+  const gap=projected-S.budget;
+  const tcCost=allWorkers().filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0)*RATE;
+  const scCost=allWorkers().filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0)*RATE;
+  const tcPct=totCost>0?((tcCost/totCost)*100).toFixed(0)+'%':'—';
+  const scPct=totCost>0?((scCost/totCost)*100).toFixed(0)+'%':'—';
+
+  s('projAvg','$'+fmt(avg));
+  const projEl=document.getElementById('projAnn');
+  projEl.textContent='$'+fmt(projected);
+  projEl.className='proj-val'+(projected>S.budget*1.2?'  danger':projected>S.budget?' warn':'  ok');
+  const gapEl=document.getElementById('projGap');
+  gapEl.textContent=(gap>0?'+':'')+' $'+fmt(Math.abs(gap));
+  gapEl.className='proj-val'+(gap>0?' danger':' ok');
+  s('projTC',tcPct);
+  s('projSC',scPct);
 }
 
 function renderCards(){
-  const filter=document.getElementById('roleFilter').value;
   const workers=allWorkers();
-  const filtered=filter==='all'?workers:workers.filter(w=>(S.roles[w.name]||'NONE')===filter);
-  const totH=filtered.reduce((s,w)=>s+w.hours,0);
+  const n=S.months.length||1;
+  const totH=workers.reduce((s,w)=>s+w.hours,0);
   const tcH=workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
   const scH=workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
   const btH=workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
-  const btC=workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').length;
-  s('cTotH',totH.toFixed(2));s('cTotC','$'+fmt(totH*10));
-  s('cTotSub',filter==='all'?'all workers':filter+' workers');
-  s('cWrk',filtered.length);s('cWrkSub',filter==='all'?'total':'matching filter');
-  s('cTCH',tcH.toFixed(2));s('cTCC','$'+fmt(tcH*10));
-  s('cSCH',scH.toFixed(2));s('cSCC','$'+fmt(scH*10));
-  s('cBH',btH.toFixed(2));s('cBSub',btC+' worker'+(btC!==1?'s':'')+' — split not determinable');
+  const unH=workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
+  const unCnt=workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').length;
+
+  s('cTotH',totH.toFixed(2));
+  s('cTotC','$'+fmt(totH*RATE));
+  s('cTotAvg','Avg '+fmt(totH/n)+' hrs/period');
+  s('cTotCost','$'+fmt(totH*RATE));
+  s('cTotCostAvg','Avg $'+fmt(totH*RATE/n)+'/period');
+  s('cTCH',tcH.toFixed(2));
+  s('cTCC','$'+fmt(tcH*RATE));
+  s('cTCAvg','Avg '+fmt(tcH/n)+' hrs/period');
+  s('cSCH',scH.toFixed(2));
+  s('cSCC','$'+fmt(scH*RATE));
+  s('cSCAvg','Avg '+fmt(scH/n)+' hrs/period');
+  s('cBH',btH.toFixed(2));
+  s('cBC','$'+fmt(btH*RATE));
+  s('cUnH',unH.toFixed(2));
+  s('cUnC','$'+fmt(unH*RATE));
+  s('cUnNote',unCnt+' worker'+(unCnt!==1?'s':'')+' need assignment');
 }
 
 function renderMonthly(){
   const el=document.getElementById('monthlyTable');
-  const btn=document.getElementById('deleteMonthBtn');
+  const btn=document.getElementById('delMonthBtn');
   if(!S.months.length){
     el.innerHTML='<div class="empty"><div class="empty-icon">📅</div><p>No data yet. Import your first Workday export above.</p></div>';
     btn.style.display='none';return;
   }
   const budget=S.budget;
-  let cumH=0,cumC=0,cumTC=0,cumSC=0,cumBoth=0;
-
+  let cumH=0,cumC=0;
   const rows=S.months.map((m,i)=>{
     const hrs=m.workers.reduce((s,w)=>s+w.hours,0);
-    const cost=hrs*10;
-
-    // Role breakdown for this period
-    const tcH   = m.workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
-    const scH   = m.workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
-    const bothH = m.workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
-    const unassH= m.workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
-
-    cumH+=hrs;cumC+=cost;cumTC+=tcH;cumSC+=scH;cumBoth+=bothH;
-
-    const bpct=budget>0?Math.min((cumC/budget)*100,100):0;
-    const barW=budget>0?Math.min((cumC/budget)*100,100):50;
-    const over=cumC>budget&&budget>0;
-    const near=!over&&budget>0&&cumC/budget>=.75;
-    const sd=m.startDate?new Date(m.startDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
-    const ed=m.endDate?new Date(m.endDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
-    const sel=_selMonth===m.startDate+'|'+m.label;
-    const bg=i%2===0?'background:rgba(0,212,255,.015)':'';
-
-    return `<tr style="${bg}" onclick="selectMonth('${m.startDate}','${esc(m.label)}')" class="${sel?'sel-row':''}">
-      <td><div class="mlbl">${esc(m.label)}</div><div class="mrange">${sd} – ${ed}</div></td>
-      <td class="r" style="color:var(--cyan)">${tcH>0?tcH.toFixed(2):'—'}</td>
-      <td class="r" style="color:var(--green)">${scH>0?scH.toFixed(2):'—'}</td>
-      <td class="r" style="color:var(--warn)">${bothH>0?bothH.toFixed(2):'—'}</td>
-      <td class="r" style="color:var(--text3)">${unassH>0?unassH.toFixed(2):'—'}</td>
-      <td class="r" style="font-weight:600">${hrs.toFixed(2)}</td>
-      <td class="r" style="color:var(--sky)">$${fmt(cost)}</td>
-      <td class="r">
-        <div class="cumbar-wrap">
-          <div class="cumbar-track"><div class="cumbar-fill" style="width:${Math.min(barW,100)}%"></div></div>
-          <span style="font-family:'Share Tech Mono',monospace;font-size:14px;color:${over?'var(--danger)':near?'var(--warn)':'var(--cyan)'}">$${fmt(cumC)}</span>
-        </div>
-      </td>
-      <td class="r" style="color:${over?'var(--danger)':near?'var(--warn)':'var(--text3)'}">
-        ${budget>0?Math.round(bpct)+'%':'—'}
-      </td>
-    </tr>`;
-  }).join('');
-
-  const over=cumC>budget&&budget>0;
-  const unassTotal=S.months.flatMap(m=>m.workers).filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
-
-  // Sub-header row labels
-  const subHdr=`<tr style="background:var(--surface)">
-    <th style="padding:8px 22px;font-size:11px;color:var(--text3);letter-spacing:.5px;border-bottom:1px solid var(--border)">Period</th>
-    <th class="r" style="padding:8px 22px;font-size:11px;color:var(--cyan);letter-spacing:.5px;border-bottom:1px solid var(--border)">TC Hrs</th>
-    <th class="r" style="padding:8px 22px;font-size:11px;color:var(--green);letter-spacing:.5px;border-bottom:1px solid var(--border)">Scribe Hrs</th>
-    <th class="r" style="padding:8px 22px;font-size:11px;color:var(--warn);letter-spacing:.5px;border-bottom:1px solid var(--border)">Both Hrs</th>
-    <th class="r" style="padding:8px 22px;font-size:11px;color:var(--text3);letter-spacing:.5px;border-bottom:1px solid var(--border)">Unassigned</th>
-    <th class="r" style="padding:8px 22px;font-size:11px;color:var(--text2);letter-spacing:.5px;border-bottom:1px solid var(--border)">Total Hrs</th>
-    <th class="r" style="padding:8px 22px;font-size:11px;color:var(--text2);letter-spacing:.5px;border-bottom:1px solid var(--border)">Cost</th>
-    <th class="r" style="padding:8px 22px;font-size:11px;color:var(--text2);letter-spacing:.5px;border-bottom:1px solid var(--border)">Cumul. Cost</th>
-    <th class="r" style="padding:8px 22px;font-size:11px;color:var(--text2);letter-spacing:.5px;border-bottom:1px solid var(--border)">% Budget</th>
-  </tr>`;
-
-  el.innerHTML=`<table>
-    <thead>${subHdr}</thead>
-    <tbody>${rows}</tbody>
-    <tfoot><tr>
-      <td><strong>TOTAL — ${S.months.length} period${S.months.length!==1?'s':''}</strong></td>
-      <td class="r" style="color:var(--cyan);font-weight:700">${cumTC>0?cumTC.toFixed(2):'—'}</td>
-      <td class="r" style="color:var(--green);font-weight:700">${cumSC>0?cumSC.toFixed(2):'—'}</td>
-      <td class="r" style="color:var(--warn);font-weight:700">${cumBoth>0?cumBoth.toFixed(2):'—'}</td>
-      <td class="r" style="color:var(--text3)">${unassTotal>0?unassTotal.toFixed(2):'—'}</td>
-      <td class="r" style="font-weight:700">${cumH.toFixed(2)}</td>
-      <td class="r" style="color:var(--sky);font-weight:700">$${fmt(cumC)}</td>
-      <td class="r" style="color:${over?'var(--danger)':'var(--cyan)'};font-weight:700">$${fmt(cumC)}</td>
-      <td class="r" style="color:${over?'var(--danger)':'var(--cyan)'};font-weight:700">
-        ${budget>0?Math.round((cumC/budget)*100)+'%':'—'}
-      </td>
-    </tr></tfoot>
-  </table>`;
-
-  btn.style.display=_selMonth?'flex':'none';
-}
-
-function selectMonth(startDate,label){
-  const key=startDate+'|'+label;
-  _selMonth=_selMonth===key?null:key;
-  renderMonthly();
-}
-
-function deleteSelectedMonth(){
-  if(!_selMonth)return;
-  const [sd,lb]=_selMonth.split('|');
-  if(!confirm('Remove '+lb+' from the tracker?'))return;
-  S.months=S.months.filter(m=>!(m.startDate===sd&&m.label===lb));
-  _selMonth=null;save();render();showToast('✓ Period removed');
-}
-
-function renderWorkers(){
-  const filter=document.getElementById('roleFilter').value;
-  const workers=latestWorkers();
-  const filtered=filter==='all'?workers:workers.filter(w=>(S.roles[w.name]||'NONE')===filter);
-  const el=document.getElementById('workerTable');
-  if(!filtered.length){
-    el.innerHTML=`<div class="empty"><div class="empty-icon">${workers.length?'🔍':'👤'}</div><p>${workers.length?'No workers match this filter.':'No workers imported yet.'}</p></div>`;
-    return;
-  }
-  const maxH=Math.max(...filtered.map(w=>w.hours),1);
-  const rows=filtered.map(w=>{
-    const role=S.roles[w.name]||'NONE';
-    const bc={TC:'btc',SC:'bsc',BOTH:'bboth',NONE:'bnone'}[role];
-    const bl={TC:'TC',SC:'SCRIBE',BOTH:'BOTH',NONE:'—'}[role];
-    const pct=(w.hours/maxH)*100;
-    return `<tr>
-      <td><span style="font-weight:600;font-size:15px">${esc(w.name)}</span><span class="role-badge ${bc}" onclick="openModal('${escJs(w.name)}')">${bl}</span></td>
-      <td class="r"><div class="mb-wrap"><div class="mb-track"><div class="mb-fill" style="width:${pct}%"></div></div><span class="vhrs">${w.hours.toFixed(2)}</span></div></td>
-      <td class="r"><span class="vcost">$${fmt(w.hours*10)}</span></td>
-    </tr>`;
-  }).join('');
-  const totH=filtered.reduce((s,w)=>s+w.hours,0);
-  el.innerHTML=`<table>
-    <thead><tr><th>Worker</th><th class="r">Hours</th><th class="r">Cost @ $10/hr</th></tr></thead>
-    <tbody>${rows}</tbody>
-    <tfoot><tr>
-      <td><strong>TOTAL (${filtered.length} workers)</strong></td>
-      <td class="r" style="color:var(--sky)">${totH.toFixed(2)}</td>
-      <td class="r" style="color:var(--cyan)">$${fmt(totH*10)}</td>
-    </tr></tfoot>
-  </table>`;
-}
-
-// Modal
-function openModal(name){
-  _mw=name;_pr=S.roles[name]||'NONE';
-  document.getElementById('modalName').textContent=name;
-  ['TC','SC','BOTH','NONE'].forEach(r=>document.getElementById('ro-'+r).classList.toggle('sel',r===_pr));
-  document.getElementById('overlay').classList.add('open');
-}
-function pickRole(r){_pr=r;['TC','SC','BOTH','NONE'].forEach(x=>document.getElementById('ro-'+x).classList.toggle('sel',x===r));}
-function confirmRole(){if(_mw){S.roles[_mw]=_pr;save();render();showToast('✓ '+_mw.split(' ')[0]+' → '+_pr);}closeModal();}
-function closeModal(e){if(e&&e.target!==document.getElementById('overlay'))return;document.getElementById('overlay').classList.remove('open');_mw=null;_pr=null;}
-
-// Export — HTML summary report (opens in new tab, no auto-print)
-function exportCSV(){
-  if(!S.months.length){showToast('⚠ Nothing to export');return;}
-  const budget=S.budget;
-  const allW=allWorkers();
-  const totH=allW.reduce((s,w)=>s+w.hours,0);
-  const totC=totH*10;
-  const tcH=allW.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
-  const scH=allW.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
-  const btH=allW.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
-  const unH=allW.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
-  const pctUsed=budget>0?((totC/budget)*100).toFixed(1):'—';
-  const remaining=budget>0?budget-totC:null;
-  const exportDate=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
-
-  let cumH=0,cumC=0;
-  const mRows=S.months.map((m,i)=>{
-    const hrs=m.workers.reduce((s,w)=>s+w.hours,0);
-    const cost=hrs*10;
+    const cost=hrs*RATE;
     const tch=m.workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
     const sch=m.workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
     const bth=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
@@ -691,19 +719,342 @@ function exportCSV(){
     cumH+=hrs;cumC+=cost;
     const over=budget>0&&cumC>budget;
     const near=!over&&budget>0&&cumC/budget>=0.75;
+    const barW=budget>0?Math.min((cumC/budget)*100,100):50;
     const sd=m.startDate?new Date(m.startDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
     const ed=m.endDate?new Date(m.endDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
-    const bg=i%2===0?'#f8fafc':'#ffffff';
-    const cumColor=over?'#dc2626':near?'#d97706':'#1e40af';
-    return `<tr style="background:${bg}">
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0"><strong>${m.label}</strong><br><span style="font-size:11px;color:#64748b">${sd} – ${ed}</span></td>
+    const sel=_selMonth===m.startDate+'|'+m.label;
+    const semBadge=m.semester?`<span class="msem ${m.semester==='Fall'?'msem-f':'msem-s'}">${m.semester}</span>`:'';
+    const bg=i%2===0?'background:rgba(0,212,255,.012)':'';
+    return `<tr style="${bg};cursor:pointer${sel?';outline:1px solid var(--cyan)':''}" onclick="selectMonth('${esc(m.startDate)}','${esc(m.label)}')">
+      <td><div class="mlbl">${esc(m.label)}${semBadge}</div><div class="mrange">${sd} – ${ed}</div></td>
+      <td class="r" style="color:var(--cyan)">${tch>0?tch.toFixed(2):'—'}</td>
+      <td class="r" style="color:var(--green)">${sch>0?sch.toFixed(2):'—'}</td>
+      <td class="r" style="color:var(--warn)">${bth>0?bth.toFixed(2):'—'}</td>
+      <td class="r" style="color:var(--text3)">${unh>0?unh.toFixed(2):'—'}</td>
+      <td class="r" style="font-weight:600">${hrs.toFixed(2)}</td>
+      <td class="r" style="color:var(--sky)">$${fmt(cost)}</td>
+      <td class="r">
+        <div class="cumbar-wrap">
+          <div class="cumbar-track"><div class="cumbar-fill" style="width:${barW}%"></div></div>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:13px;color:${over?'var(--danger)':near?'var(--warn)':'var(--cyan)'}">$${fmt(cumC)}</span>
+        </div>
+      </td>
+      <td class="r" style="color:${over?'var(--danger)':near?'var(--warn)':'var(--text3)'}">${budget>0?Math.round((cumC/budget)*100)+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const totH2=S.months.flatMap(m=>m.workers).reduce((s,w)=>s+w.hours,0);
+  const totC2=totH2*RATE;
+  const over=budget>0&&totC2>budget;
+
+  el.innerHTML=`<table>
+    <thead><tr>
+      <th>Period</th>
+      <th class="r" style="color:var(--cyan)">TC Hrs</th>
+      <th class="r" style="color:var(--green)">Scribe Hrs</th>
+      <th class="r" style="color:var(--warn)">Both Hrs</th>
+      <th class="r">Unassigned</th>
+      <th class="r">Total Hrs</th>
+      <th class="r">Cost</th>
+      <th class="r">Cumul. Cost</th>
+      <th class="r">% Budget</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr>
+      <td>TOTAL — ${S.months.length} period${S.months.length!==1?'s':''}</td>
+      <td class="r" style="color:var(--cyan)">${allWorkers().filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0).toFixed(2)}</td>
+      <td class="r" style="color:var(--green)">${allWorkers().filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0).toFixed(2)}</td>
+      <td class="r" style="color:var(--warn)">${allWorkers().filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0).toFixed(2)}</td>
+      <td class="r">${allWorkers().filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0).toFixed(2)}</td>
+      <td class="r" style="font-weight:700">${totH2.toFixed(2)}</td>
+      <td class="r" style="color:var(--sky)">$${fmt(totC2)}</td>
+      <td class="r" style="color:${over?'var(--danger)':'var(--cyan)'}">$${fmt(totC2)}</td>
+      <td class="r" style="color:${over?'var(--danger)':'var(--cyan)'}">${budget>0?Math.round((totC2/budget)*100)+'%':'—'}</td>
+    </tr></tfoot>
+  </table>`;
+  btn.style.display=_selMonth?'inline-flex':'none';
+}
+
+function renderWorkers(){
+  const filter=document.getElementById('roleFilter').value;
+  const workers=allWorkers();
+  const filtered=filter==='all'?workers:workers.filter(w=>{
+    const r=S.roles[w.name]||'NONE';
+    if(filter==='TC')return ['TC','BOTH'].includes(r);
+    if(filter==='SC')return ['SC','BOTH'].includes(r);
+    return r===filter;
+  });
+  const el=document.getElementById('workerTable');
+  if(!filtered.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">${workers.length?'🔍':'👤'}</div><p>${workers.length?'No workers match this filter.':'No workers imported yet.'}</p></div>`;
+    return;
+  }
+  const maxH=Math.max(...filtered.map(w=>w.hours),1);
+  const n=S.months.length||1;
+  const rows=filtered.map(w=>{
+    const role=S.roles[w.name]||'NONE';
+    const isNew=S.newFlags[w.name];
+    const bc={TC:'btc',SC:'bsc',BOTH:'bboth',NONE:'bnone'}[role];
+    const bl={TC:'TC',SC:'SCRIBE',BOTH:'BOTH',NONE:'—'}[role];
+    const pct=(w.hours/maxH)*100;
+    const avg=w.hours/n;
+    // Check if appeared in last import
+    const lastImport=S.months.length?S.months[S.months.length-1]:null;
+    const inLast=lastImport?lastImport.workers.some(x=>x.name===w.name):true;
+    const inactiveCls=!inLast?'w-inactive':'';
+    const newBadge=isNew?'<span class="new-badge">NEW</span>':'';
+    return `<tr class="${inactiveCls}">
+      <td class="worker-name-cell" onmouseenter="showWorkerTT(event,'${escJs(w.name)}')" onmouseleave="hideTT()">
+        <span class="wname">${esc(w.name)}</span>${newBadge}
+        <span class="role-badge ${bc}" onclick="openModal('${escJs(w.name)}')">${bl}</span>
+        ${!inLast?'<span style="font-size:10px;color:var(--text3);margin-left:6px">not in recent</span>':''}
+      </td>
+      <td class="r">
+        <div class="mb-wrap">
+          <div class="mb-track"><div class="mb-fill" style="width:${pct}%"></div></div>
+          <span class="vhrs">${w.hours.toFixed(2)}</span>
+        </div>
+      </td>
+      <td class="r"><span class="vcost">$${fmt(w.hours*RATE)}</span></td>
+      <td class="r"><span class="vavg">$${fmt(avg*RATE)}/mo</span></td>
+    </tr>`;
+  }).join('');
+
+  const totH=filtered.reduce((s,w)=>s+w.hours,0);
+  el.innerHTML=`<table>
+    <thead><tr>
+      <th>Worker</th>
+      <th class="r">Total Hours</th>
+      <th class="r">Total Cost</th>
+      <th class="r">Avg / Period</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr>
+      <td>TOTAL (${filtered.length} workers)</td>
+      <td class="r" style="color:var(--sky)">${totH.toFixed(2)}</td>
+      <td class="r" style="color:var(--cyan)">$${fmt(totH*RATE)}</td>
+      <td class="r" style="color:var(--text3)">$${fmt(totH*RATE/n)}/mo</td>
+    </tr></tfoot>
+  </table>`;
+}
+
+function renderUnassigned(){
+  const unassigned=allWorkers().filter(w=>(S.roles[w.name]||'NONE')==='NONE');
+  const newOnes=allWorkers().filter(w=>S.newFlags[w.name]);
+  const alert=document.getElementById('unassignedAlert');
+  if(unassigned.length||newOnes.length){
+    alert.classList.add('show');
+    let msg='';
+    if(newOnes.length)msg+=newOnes.length+' new worker'+(newOnes.length>1?'s':'')+' detected: '+newOnes.map(w=>w.name.split(' ')[0]).join(', ')+'. ';
+    if(unassigned.length)msg+=unassigned.length+' worker'+(unassigned.length>1?'s':'')+' still unassigned.';
+    s('unassignedMsg',msg);
+  }else{alert.classList.remove('show');}
+}
+
+// ── Tooltips ───────────────────────────────────────────────────────────────
+function positionTT(e){
+  const tt=document.getElementById('tooltip');
+  const margin=12;
+  let x=e.clientX+margin;
+  let y=e.clientY+margin;
+  if(x+tt.offsetWidth>window.innerWidth-10)x=e.clientX-tt.offsetWidth-margin;
+  if(y+tt.offsetHeight>window.innerHeight-10)y=e.clientY-tt.offsetHeight-margin;
+  tt.style.left=x+'px';
+  tt.style.top=y+'px';
+}
+
+function showCardTT(e,type){
+  const workers=allWorkers();
+  const n=S.months.length||1;
+  const tt=document.getElementById('tooltip');
+  let html='';
+
+  if(type==='all'||type==='cost'){
+    const totH=workers.reduce((s,w)=>s+w.hours,0);
+    const totC=totH*RATE;
+    const tcH=workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+    const scH=workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+    html=`<div class="tt-title">Total Summary</div>
+      <div class="tt-row"><span>Total Hours</span><span class="tt-val">${totH.toFixed(2)}</span></div>
+      <div class="tt-row"><span>Total Cost</span><span class="tt-val">$${fmt(totC)}</span></div>
+      <div class="tt-row"><span>Avg / Period</span><span class="tt-val">$${fmt(totC/n)}</span></div>
+      <div class="tt-divider"></div>
+      <div class="tt-row"><span>Testing Center</span><span class="tt-val">${tcH.toFixed(2)} hrs</span></div>
+      <div class="tt-row"><span>Scribe</span><span class="tt-val">${scH.toFixed(2)} hrs</span></div>
+      <div class="tt-row"><span>Workers</span><span class="tt-val">${workers.length}</span></div>
+      <div class="tt-row"><span>Periods imported</span><span class="tt-val">${n}</span></div>`;
+  }else if(type==='TC'){
+    const ww=workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE'));
+    const totH=ww.reduce((s,w)=>s+w.hours,0);
+    html=`<div class="tt-title">Testing Center Workers</div>
+      <div class="tt-row"><span>Total Hours</span><span class="tt-val">${totH.toFixed(2)}</span></div>
+      <div class="tt-row"><span>Total Cost</span><span class="tt-val">$${fmt(totH*RATE)}</span></div>
+      <div class="tt-row"><span>Avg / Period</span><span class="tt-val">$${fmt(totH*RATE/n)}</span></div>
+      <div class="tt-divider"></div>
+      ${ww.slice(0,6).map(w=>`<div class="tt-row"><span>${esc(w.name.split(' ')[0])}</span><span class="tt-val">${w.hours.toFixed(1)} hrs</span></div>`).join('')}
+      ${ww.length>6?`<div class="tt-row"><span style="color:var(--text3)">+${ww.length-6} more</span></div>`:''}`;
+  }else if(type==='SC'){
+    const ww=workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE'));
+    const totH=ww.reduce((s,w)=>s+w.hours,0);
+    html=`<div class="tt-title">Scribe Workers</div>
+      <div class="tt-row"><span>Total Hours</span><span class="tt-val g">${totH.toFixed(2)}</span></div>
+      <div class="tt-row"><span>Total Cost</span><span class="tt-val g">$${fmt(totH*RATE)}</span></div>
+      <div class="tt-row"><span>Avg / Period</span><span class="tt-val">$${fmt(totH*RATE/n)}</span></div>
+      <div class="tt-divider"></div>
+      ${ww.slice(0,6).map(w=>`<div class="tt-row"><span>${esc(w.name.split(' ')[0])}</span><span class="tt-val g">${w.hours.toFixed(1)} hrs</span></div>`).join('')}
+      ${ww.length>6?`<div class="tt-row"><span style="color:var(--text3)">+${ww.length-6} more</span></div>`:''}`;
+  }else if(type==='BOTH'){
+    const ww=workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH');
+    const totH=ww.reduce((s,w)=>s+w.hours,0);
+    html=`<div class="tt-title">Both Roles Workers</div>
+      <div class="tt-row"><span>Total Hours</span><span class="tt-val w">${totH.toFixed(2)}</span></div>
+      <div class="tt-row"><span>Total Cost</span><span class="tt-val w">$${fmt(totH*RATE)}</span></div>
+      <div class="tt-row"><span>Note</span><span class="tt-val" style="font-size:10px">Split not determinable</span></div>
+      <div class="tt-divider"></div>
+      ${ww.map(w=>`<div class="tt-row"><span>${esc(w.name.split(' ')[0])}</span><span class="tt-val w">${w.hours.toFixed(1)} hrs</span></div>`).join('')}`;
+  }else if(type==='NONE'){
+    const ww=workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE');
+    html=`<div class="tt-title">Unassigned Workers</div>
+      <div class="tt-row"><span>Count</span><span class="tt-val d">${ww.length} workers</span></div>
+      <div class="tt-row"><span>Hours</span><span class="tt-val d">${ww.reduce((s,w)=>s+w.hours,0).toFixed(2)}</span></div>
+      <div class="tt-divider"></div>
+      ${ww.map(w=>`<div class="tt-row"><span>${esc(w.name.split(' ')[0])}</span><span class="tt-val d">${w.hours.toFixed(1)} hrs${S.newFlags[w.name]?' 🆕':''}</span></div>`).join('')}`;
+  }
+  tt.innerHTML=html;
+  tt.classList.add('show');
+  positionTT(e);
+  tt.addEventListener('mousemove',positionTT);
+}
+
+function showWorkerTT(e,name){
+  const workers=allWorkers();
+  const w=workers.find(x=>x.name===name);
+  if(!w)return;
+  const role=S.roles[name]||'NONE';
+  const roleLabel={TC:'Testing Center',SC:'Scribe',BOTH:'Both Roles',NONE:'Unassigned'}[role];
+  const history=workerMonthHistory(name);
+  const n=history.filter(h=>h.hours>0).length;
+  const activePeriods=history.filter(h=>h.hours>0);
+  const tt=document.getElementById('tooltip');
+
+  const histRows=history.map(h=>`<div class="tt-month">
+    <span>${h.semester?h.semester.slice(0,2)+' ':''} ${esc(h.label)}</span>
+    <span class="${h.hours>0?'m-hrs':'m-zero'}">${h.hours>0?h.hours.toFixed(2)+'h':'—'}</span>
+  </div>`).join('');
+
+  tt.innerHTML=`<div class="tt-title">${esc(name)}</div>
+    <div class="tt-row"><span>Role</span><span class="tt-val">${roleLabel}</span></div>
+    <div class="tt-row"><span>Total Hours</span><span class="tt-val">${w.hours.toFixed(2)}</span></div>
+    <div class="tt-row"><span>Total Cost</span><span class="tt-val">$${fmt(w.hours*RATE)}</span></div>
+    <div class="tt-row"><span>Active Periods</span><span class="tt-val">${n} of ${S.months.length}</span></div>
+    <div class="tt-row"><span>Avg (active)</span><span class="tt-val">${n>0?fmt(w.hours/n):0} hrs/mo</span></div>
+    ${S.newFlags[name]?'<div class="tt-row"><span style="color:var(--danger)">⚠ Needs role assignment</span></div>':''}
+    <div class="tt-divider"></div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:4px">Month-by-month:</div>
+    ${histRows}`;
+  tt.classList.add('show');
+  positionTT(e);
+}
+
+function hideTT(){
+  const tt=document.getElementById('tooltip');
+  tt.classList.remove('show');
+  tt.removeEventListener('mousemove',positionTT);
+}
+
+// ── Filters ────────────────────────────────────────────────────────────────
+function setFilter(f){
+  _activeFilter=f;
+  document.getElementById('roleFilter').value=f;
+  render();
+}
+
+// ── Month selection ────────────────────────────────────────────────────────
+function selectMonth(sd,lb){
+  const key=sd+'|'+lb;
+  _selMonth=_selMonth===key?null:key;
+  renderMonthly();
+}
+
+function deleteMonth(){
+  if(!_selMonth)return;
+  const [sd,lb]=_selMonth.split('|');
+  if(!confirm('Remove '+lb+' from tracker?'))return;
+  S.months=S.months.filter(m=>!(m.startDate===sd&&m.label===lb));
+  _selMonth=null;save();render();showToast('✓ Period removed');
+}
+
+// ── Role modal ─────────────────────────────────────────────────────────────
+function openModal(name){
+  _mw=name;_pr=S.roles[name]||'NONE';
+  document.getElementById('modalName').textContent=name;
+  ['TC','SC','BOTH','NONE'].forEach(r=>document.getElementById('ro-'+r).classList.toggle('sel',r===_pr));
+  document.getElementById('overlay').classList.add('open');
+}
+function pickRole(r){_pr=r;['TC','SC','BOTH','NONE'].forEach(x=>document.getElementById('ro-'+x).classList.toggle('sel',x===r));}
+function confirmRole(){
+  if(_mw){
+    S.roles[_mw]=_pr;
+    delete S.newFlags[_mw]; // clear new flag on assignment
+    save();render();
+    showToast('✓ '+_mw.split(' ')[0]+' → '+_pr);
+  }
+  closeModal();
+}
+function closeModal(e){if(e&&e.target!==document.getElementById('overlay'))return;document.getElementById('overlay').classList.remove('open');_mw=null;_pr=null;}
+
+// ── Clear ──────────────────────────────────────────────────────────────────
+function clearAll(){
+  if(!confirm('Clear all data? Roles and assignments will also be cleared.'))return;
+  S={months:[],roles:{},newFlags:{},budget:S.budget,prevSnapshot:null,currentSem:'Fall'};
+  _selMonth=null;save();render();showToast('✓ Cleared');
+}
+
+// ── Scroll to unassigned ───────────────────────────────────────────────────
+function scrollToUnassigned(){
+  document.getElementById('roleFilter').value='NONE';
+  render();
+  document.getElementById('workerAnchor').scrollIntoView({behavior:'smooth'});
+}
+
+// ── Export Report (HTML) ───────────────────────────────────────────────────
+function exportReport(){
+  if(!S.months.length){showToast('⚠ Nothing to export');return;}
+  const budget=S.budget;
+  const workers=allWorkers();
+  const totH=workers.reduce((s,w)=>s+w.hours,0);
+  const totC=totH*RATE;
+  const tcH=workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+  const scH=workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+  const btH=workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
+  const unH=workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
+  const n=S.months.length;
+  const avg=totC/n;
+  const projected=avg*TOTAL_PERIODS;
+  const pctUsed=budget>0?((totC/budget)*100).toFixed(1):'—';
+  const remaining=budget>0?budget-totC:null;
+  const exportDate=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  const barPct=budget>0?Math.min((totC/budget)*100,100):0;
+  const barColor=totC>budget?'#dc2626':totC/budget>=.75?'#d97706':'#3b82f6';
+
+  let cumH2=0,cumC2=0;
+  const mRows=S.months.map((m,i)=>{
+    const hrs=m.workers.reduce((s,w)=>s+w.hours,0);const cost=hrs*RATE;
+    const tch=m.workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+    const sch=m.workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+    const unh=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
+    cumH2+=hrs;cumC2+=cost;
+    const over=budget>0&&cumC2>budget;
+    const sd=m.startDate?new Date(m.startDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+    const ed=m.endDate?new Date(m.endDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+    return `<tr style="background:${i%2===0?'#f8fafc':'#fff'}">
+      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0"><strong>${m.label}</strong> <span style="font-size:10px;color:#94a3b8">${m.semester||''}</span><br><span style="font-size:11px;color:#64748b">${sd} – ${ed}</span></td>
       <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;color:#0284c7;font-family:monospace">${tch>0?tch.toFixed(2):'—'}</td>
       <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;color:#059669;font-family:monospace">${sch>0?sch.toFixed(2):'—'}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;color:#d97706;font-family:monospace">${bth>0?bth.toFixed(2):'—'}</td>
       <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;color:#94a3b8;font-family:monospace">${unh>0?unh.toFixed(2):'—'}</td>
       <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;font-family:monospace">${hrs.toFixed(2)}</td>
       <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-family:monospace">$${fmt(cost)}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700;font-family:monospace;color:${cumColor}">$${fmt(cumC)}</td>
+      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-family:monospace;font-weight:700;color:${over?'#dc2626':'#1e40af'}">$${fmt(cumC2)}</td>
     </tr>`;
   }).join('');
 
@@ -712,152 +1063,185 @@ function exportCSV(){
   const roleColor={'TC':'#0284c7','SC':'#059669','BOTH':'#d97706','NONE':'#94a3b8'};
   let wRows='';
   roleOrder.forEach(role=>{
-    const ww=allW.filter(w=>(S.roles[w.name]||'NONE')===role);
+    const ww=workers.filter(w=>(S.roles[w.name]||'NONE')===role);
     if(!ww.length)return;
-    wRows+=`<tr><td colspan="3" style="padding:8px 14px;background:#f1f5f9;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${roleColor[role]};border-bottom:1px solid #e2e8f0">${roleLabel[role]}</td></tr>`;
+    wRows+=`<tr><td colspan="4" style="padding:7px 14px;background:#f1f5f9;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${roleColor[role]};border-bottom:1px solid #e2e8f0">${roleLabel[role]}</td></tr>`;
     ww.forEach((w,i)=>{
+      const history=workerMonthHistory(w.name);
+      const active=history.filter(h=>h.hours>0).length;
       wRows+=`<tr style="background:${i%2===0?'#f8fafc':'#fff'}">
         <td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;padding-left:22px">${w.name}</td>
         <td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-family:monospace">${w.hours.toFixed(2)}</td>
-        <td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-family:monospace">$${fmt(w.hours*10)}</td>
+        <td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-family:monospace">$${fmt(w.hours*RATE)}</td>
+        <td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;text-align:right;color:#64748b;font-size:12px">${active} of ${S.months.length} periods</td>
       </tr>`;
     });
   });
 
-  const barPct=budget>0?Math.min((totC/budget)*100,100):0;
-  const barColor=totC>budget?'#dc2626':totC/budget>=.75?'#d97706':'#3b82f6';
-  const remainTxt=remaining!==null?(remaining<0?'<span style="color:#dc2626;font-weight:700">Over by $'+fmt(Math.abs(remaining))+'</span>':'<span style="color:#059669;font-weight:700">$'+fmt(remaining)+' remaining</span>'):'';
-
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <title>OARS Hours Summary</title>
-  <style>
-    *{box-sizing:border-box;}
-    body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#1e293b;margin:0;padding:36px;background:#fff;max-width:1000px;margin:0 auto;padding:36px 40px;}
-    h1{font-size:22px;color:#1e3a5f;margin:0 0 4px;}
-    h2{font-size:13px;font-weight:700;color:#1e3a5f;margin:28px 0 12px;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #1e3a5f;padding-bottom:5px;}
-    table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:14px;}
-    th{background:#1e3a5f;color:#fff;padding:10px 14px;text-align:left;font-size:12px;letter-spacing:.5px;}
-    th.r{text-align:right;}
-    tfoot tr{background:#1e3a5f;}
-    tfoot td{color:#fff;padding:10px 14px;font-weight:700;font-family:monospace;}
-    tfoot td.r{text-align:right;}
-    .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:4px;}
-    .stat{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;}
-    .stat-lbl{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:5px;}
-    .stat-val{font-size:22px;font-weight:700;color:#1e3a5f;font-family:monospace;}
-    .stat-sub{font-size:12px;color:#94a3b8;margin-top:4px;}
-    .print-btn{position:fixed;top:20px;right:20px;background:#1e3a5f;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);}
-    .print-btn:hover{background:#2d4f7a;}
-    @media print{.print-btn{display:none;}}
-  </style>
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>OARS Hours Report</title>
+  <style>*{box-sizing:border-box;}body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#1e293b;margin:0 auto;padding:36px 40px;max-width:1000px;}
+  h1{font-size:22px;color:#1e3a5f;margin:0 0 4px;}h2{font-size:13px;font-weight:700;color:#1e3a5f;margin:28px 0 12px;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #1e3a5f;padding-bottom:5px;}
+  table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:14px;}th{background:#1e3a5f;color:#fff;padding:10px 14px;text-align:left;font-size:12px;letter-spacing:.5px;}th.r{text-align:right;}
+  tfoot tr{background:#1e3a5f;}tfoot td{color:#fff;padding:10px 14px;font-weight:700;font-family:monospace;}tfoot td.r{text-align:right;}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:4px;}.stat{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;}
+  .stat-lbl{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:5px;}.stat-val{font-size:20px;font-weight:700;color:#1e3a5f;font-family:monospace;}.stat-sub{font-size:12px;color:#94a3b8;margin-top:4px;}
+  .print-btn{position:fixed;top:20px;right:20px;background:#1e3a5f;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;}
+  @media print{.print-btn{display:none;}}</style>
   </head><body>
   <button class="print-btn" onclick="window.print()">🖨 Print / Save PDF</button>
-
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #1e3a5f;">
-    <div>
-      <h1>OARS Hours Tracker — Summary Report</h1>
-      <div style="color:#64748b;font-size:13px;margin-top:5px;">High Point University &nbsp;·&nbsp; Accessibility Resources &amp; Services</div>
-    </div>
-    <div style="text-align:right;font-size:12px;color:#94a3b8;line-height:1.8;">
-      <div>Exported: ${exportDate}</div>
-      <div>Periods: ${S.months.length}</div>
-      <div>Rate: $10.00 / hr</div>
-    </div>
+    <div><h1>OARS Hours Tracker — Summary Report</h1><div style="color:#64748b;font-size:13px;margin-top:4px;">High Point University &nbsp;·&nbsp; Accessibility Resources &amp; Services</div></div>
+    <div style="text-align:right;font-size:12px;color:#94a3b8;line-height:1.9;"><div>Exported: ${exportDate}</div><div>Periods: ${n} of ~${TOTAL_PERIODS}</div><div>Rate: $10.00/hr</div></div>
   </div>
-
   <h2>Budget Status</h2>
   <div style="margin-bottom:20px;">
     <div style="display:flex;justify-content:space-between;font-size:13px;color:#64748b;margin-bottom:7px;">
       <span>Spent: <strong style="color:#1e40af;font-family:monospace;">$${fmt(totC)}</strong></span>
-      <span>Budget: <strong style="font-family:monospace;">$${budget>0?budget.toLocaleString('en-US'):'Not set'}</strong></span>
-      <span>${budget>0?pctUsed+'% used':''} &nbsp; ${remainTxt}</span>
+      <span>Annual Budget: <strong>$${budget.toLocaleString('en-US')}</strong></span>
+      <span style="color:${totC>budget?'#dc2626':totC/budget>=.75?'#d97706':'#059669'};font-weight:700">${pctUsed}% used &nbsp;·&nbsp; ${remaining!==null?(remaining<0?'Over by $'+fmt(Math.abs(remaining)):'$'+fmt(remaining)+' remaining'):''}
+      </span>
     </div>
-    ${budget>0?`<div style="background:#e2e8f0;border-radius:6px;height:14px;overflow:hidden;">
-      <div style="height:100%;width:${barPct}%;background:${barColor};border-radius:6px;"></div>
-    </div>`:''}
+    <div style="background:#e2e8f0;border-radius:6px;height:14px;overflow:hidden;"><div style="height:100%;width:${barPct}%;background:${barColor};border-radius:6px;"></div></div>
   </div>
-
+  <h2>Annual Projection (${n} of ~${TOTAL_PERIODS} periods imported)</h2>
+  <div class="grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat"><div class="stat-lbl">Avg / Period</div><div class="stat-val">$${fmt(avg)}</div></div>
+    <div class="stat"><div class="stat-lbl">Projected Annual</div><div class="stat-val" style="color:${projected>budget?'#dc2626':'#059669'}">$${fmt(projected)}</div></div>
+    <div class="stat"><div class="stat-lbl">Budget Gap</div><div class="stat-val" style="color:${projected>budget?'#dc2626':'#059669'}">${projected>budget?'+':''} $${fmt(Math.abs(projected-budget))}</div></div>
+    <div class="stat"><div class="stat-lbl">TC / Scribe Split</div><div class="stat-val" style="font-size:14px">${totC>0?((tcH*RATE/totC)*100).toFixed(0)+'% / '+((scH*RATE/totC)*100).toFixed(0)+'%':'—'}</div></div>
+  </div>
   <h2>Summary by Role</h2>
-  <div class="stat-grid">
-    <div class="stat"><div class="stat-lbl">Testing Center</div><div class="stat-val" style="color:#0284c7;">${tcH.toFixed(2)} hrs</div><div class="stat-sub">$${fmt(tcH*10)}</div></div>
-    <div class="stat"><div class="stat-lbl">Scribe</div><div class="stat-val" style="color:#059669;">${scH.toFixed(2)} hrs</div><div class="stat-sub">$${fmt(scH*10)}</div></div>
-    <div class="stat"><div class="stat-lbl">Both Roles</div><div class="stat-val" style="color:#d97706;">${btH.toFixed(2)} hrs</div><div class="stat-sub">Split not determinable</div></div>
-    <div class="stat"><div class="stat-lbl">Unassigned</div><div class="stat-val" style="color:#94a3b8;">${unH.toFixed(2)} hrs</div><div class="stat-sub">$${fmt(unH*10)}</div></div>
-    <div class="stat"><div class="stat-lbl">Total Hours</div><div class="stat-val">${totH.toFixed(2)} hrs</div><div class="stat-sub">$${fmt(totC)}</div></div>
-    <div class="stat"><div class="stat-lbl">% of Budget</div><div class="stat-val" style="color:${totC>budget?'#dc2626':totC/budget>=.75?'#d97706':'#059669'}">${pctUsed}%</div><div class="stat-sub">of $${budget>0?budget.toLocaleString('en-US'):'—'}</div></div>
+  <div class="grid">
+    <div class="stat"><div class="stat-lbl">Testing Center</div><div class="stat-val" style="color:#0284c7">${tcH.toFixed(2)} hrs</div><div class="stat-sub">$${fmt(tcH*RATE)}</div></div>
+    <div class="stat"><div class="stat-lbl">Scribe</div><div class="stat-val" style="color:#059669">${scH.toFixed(2)} hrs</div><div class="stat-sub">$${fmt(scH*RATE)}</div></div>
+    <div class="stat"><div class="stat-lbl">Both Roles</div><div class="stat-val" style="color:#d97706">${btH.toFixed(2)} hrs</div><div class="stat-sub">Split not determinable</div></div>
+    <div class="stat"><div class="stat-lbl">Unassigned</div><div class="stat-val" style="color:#94a3b8">${unH.toFixed(2)} hrs</div><div class="stat-sub">$${fmt(unH*RATE)}</div></div>
+    <div class="stat"><div class="stat-lbl">Total Hours</div><div class="stat-val">${totH.toFixed(2)}</div><div class="stat-sub">$${fmt(totC)}</div></div>
+    <div class="stat"><div class="stat-lbl">% of Budget</div><div class="stat-val" style="color:${totC>budget?'#dc2626':totC/budget>=.75?'#d97706':'#059669'}">${pctUsed}%</div><div class="stat-sub">of $${budget.toLocaleString('en-US')}</div></div>
   </div>
-
   <h2>Monthly Running Total</h2>
-  <table>
-    <thead><tr>
-      <th>Period</th>
-      <th class="r" style="color:#7dd3fc;">TC Hrs</th>
-      <th class="r" style="color:#6ee7b7;">Scribe Hrs</th>
-      <th class="r" style="color:#fde68a;">Both Hrs</th>
-      <th class="r">Unassigned</th>
-      <th class="r">Total Hrs</th>
-      <th class="r">Cost</th>
-      <th class="r">Cumul. Cost</th>
-    </tr></thead>
-    <tbody>${mRows}</tbody>
-    <tfoot><tr>
-      <td>TOTAL</td>
-      <td class="r">${tcH>0?tcH.toFixed(2):'—'}</td>
-      <td class="r">${scH>0?scH.toFixed(2):'—'}</td>
-      <td class="r">${btH>0?btH.toFixed(2):'—'}</td>
-      <td class="r">${unH>0?unH.toFixed(2):'—'}</td>
-      <td class="r">${totH.toFixed(2)}</td>
-      <td class="r">$${fmt(totC)}</td>
-      <td class="r">$${fmt(totC)}</td>
-    </tr></tfoot>
-  </table>
-
-  <h2 style="margin-top:32px;">Worker Detail by Role</h2>
-  <table>
-    <thead><tr><th>Worker</th><th class="r">Total Hours</th><th class="r">Total Cost</th></tr></thead>
-    <tbody>${wRows}</tbody>
-    <tfoot><tr>
-      <td>TOTAL (${allW.length} workers)</td>
-      <td class="r">${totH.toFixed(2)}</td>
-      <td class="r">$${fmt(totC)}</td>
-    </tr></tfoot>
-  </table>
-
-  <div style="margin-top:36px;padding-top:14px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between;">
-    <span>OARS Hours Tracker &nbsp;·&nbsp; High Point University</span>
-    <span>Generated ${exportDate}</span>
-  </div>
-  </body></html>`;
+  <table><thead><tr><th>Period</th><th class="r" style="color:#7dd3fc">TC Hrs</th><th class="r" style="color:#6ee7b7">Scribe Hrs</th><th class="r">Unassigned</th><th class="r">Total Hrs</th><th class="r">Cost</th><th class="r">Cumul. Cost</th></tr></thead>
+  <tbody>${mRows}</tbody>
+  <tfoot><tr><td>TOTAL</td><td class="r">${tcH.toFixed(2)}</td><td class="r">${scH.toFixed(2)}</td><td class="r">${unH.toFixed(2)}</td><td class="r">${totH.toFixed(2)}</td><td class="r">$${fmt(totC)}</td><td class="r">$${fmt(totC)}</td></tr></tfoot></table>
+  <h2 style="margin-top:28px">Worker Detail by Role</h2>
+  <table><thead><tr><th>Worker</th><th class="r">Total Hours</th><th class="r">Total Cost</th><th class="r">Active Periods</th></tr></thead>
+  <tbody>${wRows}</tbody>
+  <tfoot><tr><td>TOTAL (${workers.length} workers)</td><td class="r">${totH.toFixed(2)}</td><td class="r">$${fmt(totC)}</td><td class="r"></td></tr></tfoot></table>
+  <div style="margin-top:32px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between;">
+    <span>OARS Hours Tracker · High Point University</span><span>Generated ${exportDate}</span>
+  </div></body></html>`;
 
   const w=window.open('','_blank');
-  if(!w){showToast('⚠ Allow pop-ups to view the report');return;}
-  w.document.write(html);
-  w.document.close();
-  showToast('✓ Report opened in new tab');
-}
-// Clear
-function clearAll(){
-  if(!confirm('Clear all imported data? Role assignments will be kept.'))return;
-  S.months=[];S.prevSnapshot=null;_selMonth=null;save();render();showToast('✓ Cleared');
+  if(!w){showToast('⚠ Allow pop-ups to view report');return;}
+  w.document.write(html);w.document.close();
+  showToast('✓ Report opened');
 }
 
-// Budget input
-document.getElementById('budgetInput').addEventListener('input',()=>{S.budget=parseFloat(document.getElementById('budgetInput').value)||0;renderBudget();renderMonthly();save();});
+// ── Year-End Report ────────────────────────────────────────────────────────
+function exportYearEnd(){
+  if(!S.months.length){showToast('⚠ No data to report');return;}
+  const budget=S.budget;
+  const workers=allWorkers();
+  const n=S.months.length;
+  const totH=workers.reduce((s,w)=>s+w.hours,0);
+  const totC=totH*RATE;
+  const tcH=workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+  const scH=workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+  const avg=totC/n;
+  const projected=avg*TOTAL_PERIODS;
+  const gap=projected-budget;
+  const exportDate=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
 
-// Utils
+  // Narrative summary
+  const overUnder=gap>0?`approximately $${fmt(gap)} over budget`:`approximately $${fmt(Math.abs(gap))} under budget`;
+  const tcPct=totC>0?((tcH*RATE/totC)*100).toFixed(0):'0';
+  const scPct=totC>0?((scH*RATE/totC)*100).toFixed(0):'0';
+  const narrative=`As of ${exportDate}, OARS has imported ${n} of approximately ${TOTAL_PERIODS} reporting periods for the academic year. Total spend to date is $${fmt(totC)} against an annual budget of $${fmt(budget)}, representing ${((totC/budget)*100).toFixed(1)}% of the annual allocation. At the current average burn rate of $${fmt(avg)} per period, the projected full-year cost is $${fmt(projected)} — ${overUnder}. Testing Center operations account for ${tcPct}% of total spend ($${fmt(tcH*RATE)}), while Scribe and Notetaker assignments account for ${scPct}% ($${fmt(scH*RATE)}).`;
+
+  // Per-worker detail with month history
+  const roleOrder=['TC','SC','BOTH','NONE'];
+  const roleLabel={'TC':'Testing Center','SC':'Scribe','BOTH':'Both Roles','NONE':'Unassigned'};
+  const roleColor={'TC':'#0284c7','SC':'#059669','BOTH':'#d97706','NONE':'#94a3b8'};
+  let workerSections='';
+  roleOrder.forEach(role=>{
+    const ww=workers.filter(w=>(S.roles[w.name]||'NONE')===role);
+    if(!ww.length)return;
+    const secH=ww.reduce((s,w)=>s+w.hours,0);
+    let workerRows=ww.map((w,i)=>{
+      const hist=workerMonthHistory(w.name);
+      const activeMos=hist.filter(h=>h.hours>0);
+      const histStr=hist.map(h=>`<span style="display:inline-block;min-width:90px;font-size:11px;color:${h.hours>0?'#1e293b':'#cbd5e1'}">${h.label.slice(0,3)}: ${h.hours>0?h.hours.toFixed(2):'—'}</span>`).join('');
+      return `<tr style="background:${i%2===0?'#f8fafc':'#fff'}">
+        <td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;padding-left:22px;font-weight:500">${w.name}</td>
+        <td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-family:monospace">${w.hours.toFixed(2)}</td>
+        <td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-family:monospace">$${fmt(w.hours*RATE)}</td>
+        <td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-family:monospace">$${fmt(w.hours*RATE/Math.max(activeMos.length,1))}</td>
+        <td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;font-size:11px">${histStr}</td>
+      </tr>`;
+    }).join('');
+    workerSections+=`<h3 style="font-size:12px;font-weight:700;color:${roleColor[role]};text-transform:uppercase;letter-spacing:1px;margin:20px 0 8px;border-bottom:1px solid ${roleColor[role]}33;padding-bottom:4px">${roleLabel[role]} — ${ww.length} worker${ww.length!==1?'s':''} · $${fmt(secH*RATE)} total</h3>
+    <table><thead><tr><th>Worker</th><th class="r">Total Hrs</th><th class="r">Total Cost</th><th class="r">Avg/Active Mo</th><th>Period Breakdown</th></tr></thead>
+    <tbody>${workerRows}</tbody></table>`;
+  });
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>OARS Year-End Analysis</title>
+  <style>*{box-sizing:border-box;}body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#1e293b;margin:0 auto;padding:36px 40px;max-width:1080px;}
+  h1{font-size:24px;color:#1e3a5f;margin:0 0 4px;}h2{font-size:13px;font-weight:700;color:#1e3a5f;margin:28px 0 12px;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #1e3a5f;padding-bottom:5px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}th{background:#1e3a5f;color:#fff;padding:9px 14px;text-align:left;font-size:11px;letter-spacing:.5px;}th.r{text-align:right;}
+  tfoot tr{background:#1e3a5f;}tfoot td{color:#fff;padding:9px 14px;font-weight:700;}tfoot td.r{text-align:right;font-family:monospace;}
+  .narrative{background:#f0f9ff;border-left:4px solid #0284c7;padding:16px 20px;margin-bottom:8px;font-size:14px;line-height:1.7;color:#1e293b;border-radius:0 8px 8px 0;}
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:8px;}
+  .kpi{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;text-align:center;}
+  .kpi-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:6px;}
+  .kpi-val{font-size:22px;font-weight:700;font-family:monospace;color:#1e3a5f;}
+  .kpi-sub{font-size:11px;color:#94a3b8;margin-top:4px;}
+  .print-btn{position:fixed;top:20px;right:20px;background:#1e3a5f;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;}
+  @media print{.print-btn{display:none;}}</style>
+  </head><body>
+  <button class="print-btn" onclick="window.print()">🖨 Print / Save PDF</button>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #1e3a5f;">
+    <div><h1>OARS Year-End Budget Analysis</h1><div style="color:#64748b;font-size:13px;margin-top:4px;">High Point University · Office of Accessibility Resources and Services</div></div>
+    <div style="text-align:right;font-size:12px;color:#94a3b8;line-height:2;"><div>${exportDate}</div><div>${n} of ~${TOTAL_PERIODS} periods</div></div>
+  </div>
+  <h2>Executive Summary</h2>
+  <div class="narrative">${narrative}</div>
+  <h2>Key Performance Indicators</h2>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-lbl">Total Spent</div><div class="kpi-val" style="color:${totC>budget?'#dc2626':'#1e3a5f'}">$${fmt(totC)}</div><div class="kpi-sub">of $${fmt(budget)} budget</div></div>
+    <div class="kpi"><div class="kpi-lbl">Avg Monthly Burn</div><div class="kpi-val">$${fmt(avg)}</div><div class="kpi-sub">per period</div></div>
+    <div class="kpi"><div class="kpi-lbl">Projected Annual</div><div class="kpi-val" style="color:${projected>budget?'#dc2626':'#059669'}">$${fmt(projected)}</div><div class="kpi-sub">${gap>0?'+$'+fmt(gap)+' over':'-$'+fmt(Math.abs(gap))+' under'}</div></div>
+    <div class="kpi"><div class="kpi-lbl">TC / Scribe Split</div><div class="kpi-val" style="font-size:16px">${tcPct}% / ${scPct}%</div><div class="kpi-sub">of total spend</div></div>
+  </div>
+  <h2>Worker Detail by Role — Full Period History</h2>
+  ${workerSections}
+  <div style="margin-top:32px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between;">
+    <span>OARS Hours Tracker · High Point University</span><span>Generated ${exportDate}</span>
+  </div></body></html>`;
+
+  const w=window.open('','_blank');
+  if(!w){showToast('⚠ Allow pop-ups to open report');return;}
+  w.document.write(html);w.document.close();
+  showToast('✓ Year-End Report opened');
+}
+
+// ── Utilities ──────────────────────────────────────────────────────────────
 function fmt(n){return parseFloat(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function s(id,v){document.getElementById(id).textContent=v;}
-function esc(x){return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function escJs(x){return String(x).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+function s(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
+function esc(x){return String(x||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escJs(x){return String(x||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 
-// Boot
+// ── Boot ───────────────────────────────────────────────────────────────────
 load();
-document.getElementById('budgetInput').value=S.budget||5818;
-// Auto-select current month in dropdown on load
+document.getElementById('budgetInput').value=S.budget||12000;
+document.getElementById('budgetInput').addEventListener('input',()=>{S.budget=parseFloat(document.getElementById('budgetInput').value)||0;renderBudget();renderProjection();save();});
+// Set month dropdown to current month
 const mnms=['January','February','March','April','May','June','July','August','September','October','November','December'];
-const sl=document.getElementById('monthLabel');const cur=mnms[new Date().getMonth()];
-if([...sl.options].some(o=>o.value===cur))sl.value=cur;
+const slx=document.getElementById('monthLabel');const curMo=mnms[new Date().getMonth()];
+if([...slx.options].some(o=>o.value===curMo))slx.value=curMo;
+// Set semester
+if(FALL_MONTHS.includes(curMo))setSem('Fall');else setSem('Spring');
+if(S.currentSem)setSem(S.currentSem);
 render();
 </script>
 </body>
