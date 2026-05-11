@@ -247,6 +247,7 @@ tfoot td.r{text-align:right;font-family:'Share Tech Mono',monospace;}
       <label>Month</label>
       <div class="sw">
         <select id="monthLabel">
+          <option value="August">August</option>
           <option value="September">September</option>
           <option value="October">October</option>
           <option value="November">November</option>
@@ -327,9 +328,7 @@ tfoot td.r{text-align:right;font-family:'Share Tech Mono',monospace;}
   <div class="card cw" onclick="setFilter('BOTH')" onmouseenter="showCardTT(event,'BOTH')" onmouseleave="hideTT()">
     <div class="card-lbl">Both Roles</div><div class="card-val" id="cBH">0.00</div><div class="card-sub" id="cBC">$0.00</div><div class="card-sub2">Split not determinable</div>
   </div>
-  <div class="card cm" onclick="setFilter('NONE')" onmouseenter="showCardTT(event,'NONE')" onmouseleave="hideTT()">
-    <div class="card-lbl">Unassigned</div><div class="card-val" id="cUnH">0.00</div><div class="card-sub" id="cUnC">$0.00</div><div class="card-sub2" id="cUnNote"></div>
-  </div>
+
 </div>
 
 <!-- Monthly Table -->
@@ -350,7 +349,6 @@ tfoot td.r{text-align:right;font-family:'Share Tech Mono',monospace;}
   <div class="leg"><div class="ldot" style="background:var(--cyan)"></div>Testing Center</div>
   <div class="leg"><div class="ldot" style="background:var(--green)"></div>Scribe</div>
   <div class="leg"><div class="ldot" style="background:var(--warn)"></div>Both</div>
-  <div class="leg"><div class="ldot" style="background:var(--text3)"></div>Unassigned</div>
   <div class="leg"><div class="ldot" style="background:var(--danger)"></div>New — needs assignment</div>
 </div>
 <div class="toolbar">
@@ -369,7 +367,6 @@ tfoot td.r{text-align:right;font-family:'Share Tech Mono',monospace;}
       <option value="TC">Testing Center</option>
       <option value="SC">Scribe</option>
       <option value="BOTH">Both</option>
-      <option value="NONE">Unassigned</option>
     </select></div>
   </div>
 </div>
@@ -412,7 +409,7 @@ tfoot td.r{text-align:right;font-family:'Share Tech Mono',monospace;}
 // ── Constants ──────────────────────────────────────────────────────────────
 const KEY = 'oars_tracker_v3';
 const RATE = 10;
-const FALL_MONTHS  = ['September','October','November','December'];
+const FALL_MONTHS  = ['August','September','October','November','December'];
 const SPRING_MONTHS= ['January','February','March','April','May'];
 const ALL_MONTHS   = [...FALL_MONTHS,...SPRING_MONTHS];
 const TOTAL_PERIODS = 8; // typical full year
@@ -677,8 +674,7 @@ function renderCards(){
   const tcH=workers.filter(w=>(S.roles[w.name]||'NONE')==='TC').reduce((s,w)=>s+w.hours,0);
   const scH=workers.filter(w=>(S.roles[w.name]||'NONE')==='SC').reduce((s,w)=>s+w.hours,0);
   const btH=workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
-  const unH=workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
-  const unCnt=workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').length;
+
 
   s('cTotH',totH.toFixed(2));
   s('cTotC','$'+fmt(totH*RATE));
@@ -693,9 +689,7 @@ function renderCards(){
   s('cSCAvg','Avg '+fmt(scH/n)+' hrs/period');
   s('cBH',btH.toFixed(2));
   s('cBC','$'+fmt(btH*RATE));
-  s('cUnH',unH.toFixed(2));
-  s('cUnC','$'+fmt(unH*RATE));
-  s('cUnNote',unCnt+' worker'+(unCnt!==1?'s':'')+' need assignment');
+
 }
 
 function renderMonthly(){
@@ -713,7 +707,6 @@ function renderMonthly(){
     const tch=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='TC').reduce((s,w)=>s+w.hours,0);
     const sch=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='SC').reduce((s,w)=>s+w.hours,0);
     const bth=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
-    const unh=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
     cumH+=hrs;cumC+=cost;
     const over=budget>0&&cumC>budget;
     const near=!over&&budget>0&&cumC/budget>=0.75;
@@ -728,7 +721,6 @@ function renderMonthly(){
       <td class="r" style="color:var(--cyan)">${tch>0?tch.toFixed(2):'—'}</td>
       <td class="r" style="color:var(--green)">${sch>0?sch.toFixed(2):'—'}</td>
       <td class="r" style="color:var(--warn)">${bth>0?bth.toFixed(2):'—'}</td>
-      <td class="r" style="color:var(--text3)">${unh>0?unh.toFixed(2):'—'}</td>
       <td class="r" style="font-weight:600">${hrs.toFixed(2)}</td>
       <td class="r" style="color:var(--sky)">$${fmt(cost)}</td>
       <td class="r">
@@ -751,7 +743,6 @@ function renderMonthly(){
       <th class="r" style="color:var(--cyan)">TC Hrs</th>
       <th class="r" style="color:var(--green)">Scribe Hrs</th>
       <th class="r" style="color:var(--warn)">Both Hrs</th>
-      <th class="r">Unassigned</th>
       <th class="r">Total Hrs</th>
       <th class="r">Cost</th>
       <th class="r">Cumul. Cost</th>
@@ -763,7 +754,6 @@ function renderMonthly(){
       <td class="r" style="color:var(--cyan)">${allWorkers().filter(w=>(S.roles[w.name]||'NONE')==='TC').reduce((s,w)=>s+w.hours,0).toFixed(2)}</td>
       <td class="r" style="color:var(--green)">${allWorkers().filter(w=>(S.roles[w.name]||'NONE')==='SC').reduce((s,w)=>s+w.hours,0).toFixed(2)}</td>
       <td class="r" style="color:var(--warn)">${allWorkers().filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0).toFixed(2)}</td>
-      <td class="r">${allWorkers().filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0).toFixed(2)}</td>
       <td class="r" style="font-weight:700">${totH2.toFixed(2)}</td>
       <td class="r" style="color:var(--sky)">$${fmt(totC2)}</td>
       <td class="r" style="color:${over?'var(--danger)':'var(--cyan)'}">$${fmt(totC2)}</td>
@@ -910,14 +900,8 @@ function showCardTT(e,type){
       <div class="tt-row"><span>Note</span><span class="tt-val" style="font-size:10px">Split not determinable</span></div>
       <div class="tt-divider"></div>
       ${ww.map(w=>`<div class="tt-row"><span>${esc(w.name.split(' ')[0])}</span><span class="tt-val w">${w.hours.toFixed(1)} hrs</span></div>`).join('')}`;
-  }else if(type==='NONE'){
-    const ww=workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE');
-    html=`<div class="tt-title">Unassigned Workers</div>
-      <div class="tt-row"><span>Count</span><span class="tt-val d">${ww.length} workers</span></div>
-      <div class="tt-row"><span>Hours</span><span class="tt-val d">${ww.reduce((s,w)=>s+w.hours,0).toFixed(2)}</span></div>
-      <div class="tt-divider"></div>
-      ${ww.map(w=>`<div class="tt-row"><span>${esc(w.name.split(' ')[0])}</span><span class="tt-val d">${w.hours.toFixed(1)} hrs${S.newFlags[w.name]?' 🆕':''}</span></div>`).join('')}`;
   }
+
   tt.innerHTML=html;
   tt.classList.add('show');
   positionTT(e);
