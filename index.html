@@ -244,7 +244,7 @@ tfoot td.r{text-align:right;font-family:'Share Tech Mono',monospace;}
       </div>
     </div>
     <div class="field">
-      <label>Month &nbsp;<span id="monthHint" style="font-size:11px;color:var(--warn);font-weight:600"></span></label>
+      <label>Month</label>
       <div class="sw">
         <select id="monthLabel">
           <option value="September">September</option>
@@ -492,17 +492,9 @@ function handleFile(e){
         startDate=toISO(String(dateCols[0]));
         endDate=toISO(String(dateCols[dateCols.length-1]));
         const fmt2=iso=>new Date(iso+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-        const suggestedMo=new Date(endDate+'T00:00:00').toLocaleString('en-US',{month:'long'});
         document.getElementById('detectedRange').textContent=fmt2(startDate)+' – '+fmt2(endDate);
-        // Show suggestion hint next to dropdown label if it differs from current selection
-        const sl=document.getElementById('monthLabel');
-        const hint=document.getElementById('monthHint');
-        if(hint){hint.textContent=sl.value!==suggestedMo?'(file suggests: '+suggestedMo+')':'';}
-        // Suggest month from END date — shown as hint only, never overrides dropdown
-        const moSuggested=new Date(endDate+'T00:00:00').toLocaleString('en-US',{month:'long'});
-        // Auto semester from end date (semester toggle is fine to auto-set)
-        if(FALL_MONTHS.includes(moSuggested)){setSem('Fall');S.currentSem='Fall';}
-        else if(SPRING_MONTHS.includes(moSuggested)){setSem('Spring');S.currentSem='Spring';}
+
+
       }
 
       // Parse workers
@@ -552,6 +544,9 @@ function handleFile(e){
         return order.indexOf(a.label)-order.indexOf(b.label);
       });
 
+      // Always reset filter to 'all' after import so all workers show immediately
+      document.getElementById('roleFilter').value='all';
+      _activeFilter='all';
       save();render();
       let msg=`✓ Imported ${workers.length} workers for ${label}`;
       if(newNames.length)msg+=` · ${newNames.length} new name${newNames.length>1?'s':''} detected`;
@@ -1017,8 +1012,7 @@ function clearAll(){
 
 // ── Scroll to unassigned ───────────────────────────────────────────────────
 function scrollToUnassigned(){
-  document.getElementById('roleFilter').value='NONE';
-  render();
+  // Don't filter — just scroll to the worker table so user can see NEW badges
   document.getElementById('workerAnchor').scrollIntoView({behavior:'smooth'});
 }
 
