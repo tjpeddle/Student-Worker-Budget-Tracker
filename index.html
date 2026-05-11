@@ -355,7 +355,8 @@ tfoot td.r{text-align:right;font-family:'Share Tech Mono',monospace;}
 </div>
 <div class="toolbar">
   <div class="btn-row">
-    <button class="btn btn-ghost btn-sm" onclick="exportReport()">⬇ Export Report</button>
+    <button class="btn btn-ghost btn-sm" onclick="exportReport()">⬇ Export HTML</button>
+    <button class="btn btn-ghost btn-sm" onclick="exportDocx()">📄 Export Word</button>
     <button class="btn btn-warn btn-sm" onclick="exportState()">💾 Save State</button>
     <button class="btn btn-ghost btn-sm" onclick="document.getElementById('stateInput').click()">📂 Load State</button>
     <input type="file" id="stateInput" accept=".json" style="display:none" onchange="importState(event)">
@@ -407,6 +408,7 @@ tfoot td.r{text-align:right;font-family:'Share Tech Mono',monospace;}
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 // ── Constants ──────────────────────────────────────────────────────────────
 const KEY = 'oars_tracker_v3';
@@ -1221,6 +1223,295 @@ function exportYearEnd(){
   if(!w){showToast('⚠ Allow pop-ups to open report');return;}
   w.document.write(html);w.document.close();
   showToast('✓ Year-End Report opened');
+}
+
+// ── Export Word Doc (docx via JSZip + raw XML) ────────────────────────────
+async function exportDocx(){
+  if(!S.months.length){showToast('⚠ Nothing to export');return;}
+  if(typeof JSZip==='undefined'){showToast('⚠ JSZip not loaded yet, try again');return;}
+  showToast('⏳ Building Word doc...');
+
+  const budget=S.budget;
+  const workers=allWorkers();
+  const totH=workers.reduce((s,w)=>s+w.hours,0);
+  const totC=totH*RATE;
+  const tcH=workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+  const scH=workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+  const btH=workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
+  const unH=workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
+  const n=S.months.length;
+  const avg=totC/n;
+  const projected=avg*TOTAL_PERIODS;
+  const gap=projected-budget;
+  const pctUsed=budget>0?((totC/budget)*100).toFixed(1):'—';
+  const remaining=budget>0?budget-totC:null;
+  const exportDate=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+
+  // ── XML helpers ──
+  const x=(tag,attrs,children)=>{
+    const a=attrs?Object.entries(attrs).map(([k,v])=>' '+k+'="'+v+'"').join(''):'';
+    if(children===undefined)return '<'+tag+a+'/>';
+    return '<'+tag+a+'>'+children+'</'+tag+'>';
+  };
+
+  const rpr=(opts={})=>{
+    let s='';
+    if(opts.bold)s+=x('w:b')+''+x('w:bCs');
+    if(opts.size)s+=x('w:sz',{'w:val':opts.size})+x('w:szCs',{'w:val':opts.size});
+    if(opts.color)s+=x('w:color',{'w:val':opts.color});
+    if(opts.font)s+=x('w:rFonts',{'w:ascii':opts.font,'w:hAnsi':opts.font});
+    if(opts.italic)s+=x('w:i')+x('w:iCs');
+    return s?x('w:rPr',null,s):'';
+  };
+
+  const run=(text,opts={})=>x('w:r',null,rpr(opts)+x('w:t',{'xml:space':'preserve'},esc(String(text))));
+
+  const para=(children,opts={})=>{
+    let ppr='';
+    if(opts.spacing)ppr+=x('w:spacing',{'w:before':opts.spacing.before||0,'w:after':opts.spacing.after||120});
+    if(opts.align)ppr+=x('w:jc',{'w:val':opts.align});
+    if(opts.shade)ppr+=x('w:shd',{'w:val':'clear','w:color':'auto','w:fill':opts.shade});
+    return x('w:p',null,(ppr?x('w:pPr',null,ppr):'')+children);
+  };
+
+  const heading=(text,level=1)=>para(
+    run(text,{bold:true,size:level===1?32:26,color:level===1?'1E3A5F':'2E5F8A',font:'Calibri'}),
+    {spacing:{before:240,after:80}}
+  );
+
+  const bodyPara=(text,opts={})=>para(run(text,{size:22,font:'Calibri',...opts}),{spacing:{before:60,after:60}});
+
+  // ── Table builder ──
+  const tcell=(text,opts={})=>{
+    const {width=1500,bold=false,color='000000',shade=null,align='left'}=opts;
+    const cellPr=x('w:tcPr',null,
+      x('w:tcW',{'w:w':width,'w:type':'dxa'})+
+      (shade?x('w:shd',{'w:val':'clear','w:color':'auto','w:fill':shade}):'')
+    );
+    const ppr=align!=='left'?x('w:pPr',null,x('w:jc',{'w:val':align})):'';
+    return x('w:tc',null,cellPr+x('w:p',null,ppr+run(text,{bold,color,size:20,font:'Calibri'})));
+  };
+
+  const hcell=(text,width=1500)=>tcell(text,{width,bold:true,color:'FFFFFF',shade:'1E3A5F',align:'center'});
+
+  const trow=(...cells)=>x('w:tr',null,cells.join(''));
+
+  const table=(rows,widths)=>{
+    const gridCols=widths.map(w=>x('w:gridCol',{'w:w':w})).join('');
+    const tblPr=x('w:tblPr',null,
+      x('w:tblW',{'w:w':'9360','w:type':'dxa'})+
+      x('w:tblBorders',null,
+        ['top','bottom','left','right','insideH','insideV'].map(s=>
+          x('w:'+s,{'w:val':'single','w:sz':'4','w:color':'CCCCCC'})
+        ).join('')
+      )
+    );
+    return x('w:tbl',null,tblPr+x('w:tblGrid',null,gridCols)+rows.join(''));
+  };
+
+  // ── Build document body ──
+  let body='';
+
+  // Title
+  body+=para(
+    run('OARS Hours Tracker — Summary Report',{bold:true,size:40,color:'1E3A5F',font:'Calibri'}),
+    {spacing:{before:0,after:80}}
+  );
+  body+=para(
+    run('High Point University  ·  Accessibility Resources & Services',{size:22,color:'64748B',font:'Calibri'}),
+    {spacing:{before:0,after:60}}
+  );
+  body+=para(
+    run('Exported: '+exportDate+'   |   Periods: '+n+' of ~'+TOTAL_PERIODS+'   |   Rate: $10.00/hr',{size:18,color:'94A3B8',font:'Calibri',italic:true}),
+    {spacing:{before:0,after:240}}
+  );
+
+  // Budget Status
+  body+=heading('Budget Status');
+  body+=table([
+    trow(hcell('Annual Budget',2340),hcell('Total Spent',2340),hcell('Remaining',2340),hcell('% Used',2340)),
+    trow(
+      tcell('$'+fmt(budget),{width:2340,bold:true,align:'center'}),
+      tcell('$'+fmt(totC),{width:2340,bold:true,align:'center',color:totC>budget?'DC2626':'000000'}),
+      tcell(remaining!==null?(remaining<0?'-$'+fmt(Math.abs(remaining)):'$'+fmt(remaining)):'—',{width:2340,bold:true,align:'center',color:remaining!==null&&remaining<0?'DC2626':'059669'}),
+      tcell(pctUsed+'%',{width:2340,bold:true,align:'center',color:totC>budget?'DC2626':totC/budget>=.75?'D97706':'059669'})
+    )
+  ],[2340,2340,2340,2340]);
+
+  // Projection
+  body+=heading('Annual Projection ('+n+' of ~'+TOTAL_PERIODS+' periods)');
+  body+=table([
+    trow(hcell('Avg / Period',2340),hcell('Projected Annual',2340),hcell('Budget Gap',2340),hcell('TC / Scribe Split',2340)),
+    trow(
+      tcell('$'+fmt(avg),{width:2340,bold:true,align:'center'}),
+      tcell('$'+fmt(projected),{width:2340,bold:true,align:'center',color:projected>budget?'DC2626':'059669'}),
+      tcell((gap>0?'+':'')+' $'+fmt(Math.abs(gap)),{width:2340,bold:true,align:'center',color:gap>0?'DC2626':'059669'}),
+      tcell(totC>0?((tcH*RATE/totC)*100).toFixed(0)+'% / '+((scH*RATE/totC)*100).toFixed(0)+'%':'—',{width:2340,align:'center'})
+    )
+  ],[2340,2340,2340,2340]);
+
+  // Role Summary
+  body+=heading('Summary by Role');
+  body+=table([
+    trow(hcell('Testing Center',2340),hcell('Scribe',2340),hcell('Both Roles',2340),hcell('Unassigned',2340)),
+    trow(
+      tcell(tcH.toFixed(2)+' hrs  ($'+fmt(tcH*RATE)+')',{width:2340,align:'center',color:'0284C7',bold:true}),
+      tcell(scH.toFixed(2)+' hrs  ($'+fmt(scH*RATE)+')',{width:2340,align:'center',color:'059669',bold:true}),
+      tcell(btH.toFixed(2)+' hrs',{width:2340,align:'center',color:'D97706',bold:true}),
+      tcell(unH.toFixed(2)+' hrs  ($'+fmt(unH*RATE)+')',{width:2340,align:'center',color:'94A3B8',bold:true})
+    )
+  ],[2340,2340,2340,2340]);
+
+  // Monthly table
+  body+=heading('Monthly Running Total');
+  let cumH2=0,cumC2=0;
+  const mBodyRows=S.months.map((m,i)=>{
+    const hrs=m.workers.reduce((s,w)=>s+w.hours,0);
+    const cost=hrs*RATE;
+    const tch=m.workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+    const sch=m.workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+    const unh=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
+    cumH2+=hrs;cumC2+=cost;
+    const over=budget>0&&cumC2>budget;
+    const shade=i%2===0?'F1F5F9':null;
+    const sd=m.startDate?new Date(m.startDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+    const ed=m.endDate?new Date(m.endDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+    return trow(
+      tcell(m.label+(m.semester?' ('+m.semester+')':'')+'\n'+sd+' – '+ed,{width:1800,shade}),
+      tcell(tch>0?tch.toFixed(2):'—',{width:1100,shade,align:'right',color:'0284C7'}),
+      tcell(sch>0?sch.toFixed(2):'—',{width:1100,shade,align:'right',color:'059669'}),
+      tcell(unh>0?unh.toFixed(2):'—',{width:1100,shade,align:'right',color:'94A3B8'}),
+      tcell(hrs.toFixed(2),{width:1100,shade,align:'right',bold:true}),
+      tcell('$'+fmt(cost),{width:1280,shade,align:'right'}),
+      tcell('$'+fmt(cumC2),{width:1380,shade,align:'right',bold:true,color:over?'DC2626':'1E40AF'})
+    );
+  });
+  const totRow=trow(
+    tcell('TOTAL — '+n+' periods',{width:1800,bold:true,shade:'E2E8F0'}),
+    tcell(tcH.toFixed(2),{width:1100,bold:true,shade:'E2E8F0',align:'right',color:'0284C7'}),
+    tcell(scH.toFixed(2),{width:1100,bold:true,shade:'E2E8F0',align:'right',color:'059669'}),
+    tcell(unH.toFixed(2),{width:1100,bold:true,shade:'E2E8F0',align:'right',color:'94A3B8'}),
+    tcell(totH.toFixed(2),{width:1100,bold:true,shade:'E2E8F0',align:'right'}),
+    tcell('$'+fmt(totC),{width:1280,bold:true,shade:'E2E8F0',align:'right'}),
+    tcell('$'+fmt(totC),{width:1380,bold:true,shade:'E2E8F0',align:'right',color:totC>budget?'DC2626':'1E40AF'})
+  );
+  body+=table([
+    trow(hcell('Period',1800),hcell('TC Hrs',1100),hcell('Scribe Hrs',1100),hcell('Unassigned',1100),hcell('Total Hrs',1100),hcell('Cost',1280),hcell('Cumul. Cost',1380)),
+    ...mBodyRows,totRow
+  ],[1800,1100,1100,1100,1100,1280,1380]);
+
+  // Worker detail
+  body+=heading('Worker Detail by Role');
+  const roleOrder=['TC','SC','BOTH','NONE'];
+  const roleLabel={'TC':'Testing Center','SC':'Scribe','BOTH':'Both Roles','NONE':'Unassigned'};
+  const roleColors={'TC':'0284C7','SC':'059669','BOTH':'D97706','NONE':'94A3B8'};
+  roleOrder.forEach(role=>{
+    const ww=workers.filter(w=>(S.roles[w.name]||'NONE')===role);
+    if(!ww.length)return;
+    const secH=ww.reduce((s,w)=>s+w.hours,0);
+    body+=para(
+      run(roleLabel[role]+' — '+ww.length+' worker'+(ww.length!==1?'s':'')+' · $'+fmt(secH*RATE),
+        {bold:true,size:22,color:roleColors[role],font:'Calibri'}),
+      {spacing:{before:180,after:80}}
+    );
+    const wRows=ww.map((w,i)=>{
+      const hist=workerMonthHistory(w.name);
+      const active=hist.filter(h=>h.hours>0).length;
+      const shade=i%2===0?'F8FAFC':null;
+      return trow(
+        tcell(w.name,{width:3600,shade}),
+        tcell(w.hours.toFixed(2),{width:1200,shade,align:'right'}),
+        tcell('$'+fmt(w.hours*RATE),{width:1200,shade,align:'right'}),
+        tcell(active+' of '+n+' periods',{width:1800,shade,align:'right',color:'94A3B8'})
+      );
+    });
+    body+=table([
+      trow(hcell('Worker',3600),hcell('Total Hours',1200),hcell('Total Cost',1200),hcell('Active Periods',1800)),
+      ...wRows,
+      trow(
+        tcell('TOTAL',{width:3600,bold:true,shade:'E2E8F0'}),
+        tcell(secH.toFixed(2),{width:1200,bold:true,shade:'E2E8F0',align:'right'}),
+        tcell('$'+fmt(secH*RATE),{width:1200,bold:true,shade:'E2E8F0',align:'right'}),
+        tcell('',{width:1800,shade:'E2E8F0'})
+      )
+    ],[3600,1200,1200,1800]);
+  });
+
+  // Footer
+  body+=para(
+    run('OARS Hours Tracker  ·  High Point University  ·  Generated '+exportDate,
+      {size:16,color:'94A3B8',font:'Calibri',italic:true}),
+    {spacing:{before:280,after:0},align:'center'}
+  );
+
+  // ── Assemble .docx ──
+  const docXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:o="urn:schemas-microsoft-com:office:office"
+  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+  xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"
+  xmlns:v="urn:schemas-microsoft-com:vml"
+  xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing"
+  xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+  xmlns:w10="urn:schemas-microsoft-com:office:word"
+  xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+  xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml"
+  xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup"
+  xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk"
+  xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml"
+  xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape"
+  mc:Ignorable="w14 wp14">
+  <w:body>
+    ${body}
+    <w:sectPr>
+      <w:pgSz w:w="12240" w:h="15840"/>
+      <w:pgMar w:top="1080" w:right="1080" w:bottom="1080" w:left="1080"/>
+    </w:sectPr>
+  </w:body>
+</w:document>`;
+
+  const relsXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`;
+
+  const stylesXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:docDefaults>
+    <w:rPrDefault><w:rPr>
+      <w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/>
+      <w:sz w:val="22"/><w:szCs w:val="22"/>
+    </w:rPr></w:rPrDefault>
+  </w:docDefaults>
+</w:styles>`;
+
+  const contentTypesXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+</Types>`;
+
+  const rootRelsXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`;
+
+  const zip=new JSZip();
+  zip.file('[Content_Types].xml', contentTypesXml);
+  zip.file('_rels/.rels', rootRelsXml);
+  zip.file('word/document.xml', docXml);
+  zip.file('word/styles.xml', stylesXml);
+  zip.file('word/_rels/document.xml.rels', relsXml);
+
+  const blob=await zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='OARS_Hours_Report_'+new Date().toISOString().slice(0,10)+'.docx';
+  a.click();
+  showToast('✓ Word doc downloaded');
 }
 
 // ── Utilities ──────────────────────────────────────────────────────────────
