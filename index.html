@@ -492,15 +492,22 @@ function handleFile(e){
         startDate=toISO(String(dateCols[0]));
         endDate=toISO(String(dateCols[dateCols.length-1]));
         const fmt2=iso=>new Date(iso+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-        document.getElementById('detectedRange').textContent=fmt2(startDate)+' – '+fmt2(endDate);
-        // auto month label from detected dates
-        const mo=new Date(startDate+'T00:00:00').toLocaleString('en-US',{month:'long'});
+        const suggestedMo=new Date(endDate+'T00:00:00').toLocaleString('en-US',{month:'long'});
+        document.getElementById('detectedRange').textContent=fmt2(startDate)+' – '+fmt2(endDate)+' ('+suggestedMo+')';
+        // Auto-suggest month from END date (most accurate for Workday exports)
+        // Use endDate since exports typically end in the reporting month
+        const moFromEnd=new Date(endDate+'T00:00:00').toLocaleString('en-US',{month:'long'});
         const sl=document.getElementById('monthLabel');
-        if([...sl.options].some(o=>o.value===mo))sl.value=mo;
-        S.lastDetectedMonth=mo;
-        // auto semester
-        if(FALL_MONTHS.includes(mo)){setSem('Fall');S.currentSem='Fall';}
-        else if(SPRING_MONTHS.includes(mo)){setSem('Spring');S.currentSem='Spring';}
+        // Only auto-set if not already manually changed by user this session
+        if(!S._userPickedMonth){
+          if([...sl.options].some(o=>o.value===moFromEnd))sl.value=moFromEnd;
+          S.lastDetectedMonth=moFromEnd;
+        }
+        // Auto semester from end date
+        if(FALL_MONTHS.includes(moFromEnd)){setSem('Fall');S.currentSem='Fall';}
+        else if(SPRING_MONTHS.includes(moFromEnd)){setSem('Spring');S.currentSem='Spring';}
+        // Show both detected dates for reference
+        S._userPickedMonth=false; // reset after file load
       }
 
       // Parse workers
@@ -1237,12 +1244,14 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 load();
 document.getElementById('budgetInput').value=S.budget||12000;
 document.getElementById('budgetInput').addEventListener('input',()=>{S.budget=parseFloat(document.getElementById('budgetInput').value)||0;renderBudget();renderProjection();save();});
-// Restore last used semester and month (set from file detection, not calendar)
+// Restore last used semester and month
 if(S.currentSem)setSem(S.currentSem);
 if(S.lastDetectedMonth){
   const slr=document.getElementById('monthLabel');
   if([...slr.options].some(o=>o.value===S.lastDetectedMonth))slr.value=S.lastDetectedMonth;
 }
+// Flag when user manually picks a month so auto-detect won't override it
+document.getElementById('monthLabel').addEventListener('change',()=>{S._userPickedMonth=true;});
 render();
 </script>
 </body>
