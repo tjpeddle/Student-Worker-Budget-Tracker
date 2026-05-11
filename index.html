@@ -355,7 +355,6 @@ tfoot td.r{text-align:right;font-family:'Share Tech Mono',monospace;}
 </div>
 <div class="toolbar">
   <div class="btn-row">
-    <button class="btn btn-ghost btn-sm" onclick="exportReport()">⬇ Export HTML</button>
     <button class="btn btn-ghost btn-sm" onclick="exportDocx()">📄 Export Word</button>
     <button class="btn btn-warn btn-sm" onclick="exportState()">💾 Save State</button>
     <button class="btn btn-ghost btn-sm" onclick="document.getElementById('stateInput').click()">📂 Load State</button>
@@ -586,10 +585,7 @@ function semCost(sem){
 }
 
 function roleCost(role){
-  return allWorkers().filter(w=>role==='BOTH'
-    ? (S.roles[w.name]||'NONE')==='BOTH'
-    : ['TC','BOTH'].includes(S.roles[w.name]||'NONE')&&role==='TC'||
-      ['SC','BOTH'].includes(S.roles[w.name]||'NONE')&&role==='SC')
+  return allWorkers().filter(w=>(S.roles[w.name]||'NONE')===role)
     .reduce((s,w)=>s+w.hours,0)*RATE;
 }
 
@@ -658,8 +654,8 @@ function renderProjection(){
   const avg=totCost/n;
   const projected=avg*TOTAL_PERIODS;
   const gap=projected-S.budget;
-  const tcCost=allWorkers().filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0)*RATE;
-  const scCost=allWorkers().filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0)*RATE;
+  const tcCost=allWorkers().filter(w=>(S.roles[w.name]||'NONE')==='TC').reduce((s,w)=>s+w.hours,0)*RATE;
+  const scCost=allWorkers().filter(w=>(S.roles[w.name]||'NONE')==='SC').reduce((s,w)=>s+w.hours,0)*RATE;
   const tcPct=totCost>0?((tcCost/totCost)*100).toFixed(0)+'%':'—';
   const scPct=totCost>0?((scCost/totCost)*100).toFixed(0)+'%':'—';
 
@@ -678,8 +674,8 @@ function renderCards(){
   const workers=allWorkers();
   const n=S.months.length||1;
   const totH=workers.reduce((s,w)=>s+w.hours,0);
-  const tcH=workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
-  const scH=workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+  const tcH=workers.filter(w=>(S.roles[w.name]||'NONE')==='TC').reduce((s,w)=>s+w.hours,0);
+  const scH=workers.filter(w=>(S.roles[w.name]||'NONE')==='SC').reduce((s,w)=>s+w.hours,0);
   const btH=workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
   const unH=workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
   const unCnt=workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').length;
@@ -714,8 +710,8 @@ function renderMonthly(){
   const rows=S.months.map((m,i)=>{
     const hrs=m.workers.reduce((s,w)=>s+w.hours,0);
     const cost=hrs*RATE;
-    const tch=m.workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
-    const sch=m.workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+    const tch=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='TC').reduce((s,w)=>s+w.hours,0);
+    const sch=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='SC').reduce((s,w)=>s+w.hours,0);
     const bth=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
     const unh=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
     cumH+=hrs;cumC+=cost;
@@ -764,8 +760,8 @@ function renderMonthly(){
     <tbody>${rows}</tbody>
     <tfoot><tr>
       <td>TOTAL — ${S.months.length} period${S.months.length!==1?'s':''}</td>
-      <td class="r" style="color:var(--cyan)">${allWorkers().filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0).toFixed(2)}</td>
-      <td class="r" style="color:var(--green)">${allWorkers().filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0).toFixed(2)}</td>
+      <td class="r" style="color:var(--cyan)">${allWorkers().filter(w=>(S.roles[w.name]||'NONE')==='TC').reduce((s,w)=>s+w.hours,0).toFixed(2)}</td>
+      <td class="r" style="color:var(--green)">${allWorkers().filter(w=>(S.roles[w.name]||'NONE')==='SC').reduce((s,w)=>s+w.hours,0).toFixed(2)}</td>
       <td class="r" style="color:var(--warn)">${allWorkers().filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0).toFixed(2)}</td>
       <td class="r">${allWorkers().filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0).toFixed(2)}</td>
       <td class="r" style="font-weight:700">${totH2.toFixed(2)}</td>
@@ -874,8 +870,8 @@ function showCardTT(e,type){
   if(type==='all'||type==='cost'){
     const totH=workers.reduce((s,w)=>s+w.hours,0);
     const totC=totH*RATE;
-    const tcH=workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
-    const scH=workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+    const tcH=workers.filter(w=>(S.roles[w.name]||'NONE')==='TC').reduce((s,w)=>s+w.hours,0);
+    const scH=workers.filter(w=>(S.roles[w.name]||'NONE')==='SC').reduce((s,w)=>s+w.hours,0);
     html=`<div class="tt-title">Total Summary</div>
       <div class="tt-row"><span>Total Hours</span><span class="tt-val">${totH.toFixed(2)}</span></div>
       <div class="tt-row"><span>Total Cost</span><span class="tt-val">$${fmt(totC)}</span></div>
@@ -886,7 +882,7 @@ function showCardTT(e,type){
       <div class="tt-row"><span>Workers</span><span class="tt-val">${workers.length}</span></div>
       <div class="tt-row"><span>Periods imported</span><span class="tt-val">${n}</span></div>`;
   }else if(type==='TC'){
-    const ww=workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE'));
+    const ww=workers.filter(w=>(S.roles[w.name]||'NONE')==='TC');
     const totH=ww.reduce((s,w)=>s+w.hours,0);
     html=`<div class="tt-title">Testing Center Workers</div>
       <div class="tt-row"><span>Total Hours</span><span class="tt-val">${totH.toFixed(2)}</span></div>
@@ -896,7 +892,7 @@ function showCardTT(e,type){
       ${ww.slice(0,6).map(w=>`<div class="tt-row"><span>${esc(w.name.split(' ')[0])}</span><span class="tt-val">${w.hours.toFixed(1)} hrs</span></div>`).join('')}
       ${ww.length>6?`<div class="tt-row"><span style="color:var(--text3)">+${ww.length-6} more</span></div>`:''}`;
   }else if(type==='SC'){
-    const ww=workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE'));
+    const ww=workers.filter(w=>(S.roles[w.name]||'NONE')==='SC');
     const totH=ww.reduce((s,w)=>s+w.hours,0);
     html=`<div class="tt-title">Scribe Workers</div>
       <div class="tt-row"><span>Total Hours</span><span class="tt-val g">${totH.toFixed(2)}</span></div>
@@ -1018,125 +1014,6 @@ function scrollToUnassigned(){
   document.getElementById('workerAnchor').scrollIntoView({behavior:'smooth'});
 }
 
-// ── Export Report (HTML) ───────────────────────────────────────────────────
-function exportReport(){
-  if(!S.months.length){showToast('⚠ Nothing to export');return;}
-  const budget=S.budget;
-  const workers=allWorkers();
-  const totH=workers.reduce((s,w)=>s+w.hours,0);
-  const totC=totH*RATE;
-  const tcH=workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
-  const scH=workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
-  const btH=workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
-  const unH=workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
-  const n=S.months.length;
-  const avg=totC/n;
-  const projected=avg*TOTAL_PERIODS;
-  const pctUsed=budget>0?((totC/budget)*100).toFixed(1):'—';
-  const remaining=budget>0?budget-totC:null;
-  const exportDate=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
-  const barPct=budget>0?Math.min((totC/budget)*100,100):0;
-  const barColor=totC>budget?'#dc2626':totC/budget>=.75?'#d97706':'#3b82f6';
-
-  let cumH2=0,cumC2=0;
-  const mRows=S.months.map((m,i)=>{
-    const hrs=m.workers.reduce((s,w)=>s+w.hours,0);const cost=hrs*RATE;
-    const tch=m.workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
-    const sch=m.workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
-    const unh=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
-    cumH2+=hrs;cumC2+=cost;
-    const over=budget>0&&cumC2>budget;
-    const sd=m.startDate?new Date(m.startDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
-    const ed=m.endDate?new Date(m.endDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
-    return `<tr style="background:${i%2===0?'#f8fafc':'#fff'}">
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0"><strong>${m.label}</strong> <span style="font-size:10px;color:#94a3b8">${m.semester||''}</span><br><span style="font-size:11px;color:#64748b">${sd} – ${ed}</span></td>
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;color:#0284c7;font-family:monospace">${tch>0?tch.toFixed(2):'—'}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;color:#059669;font-family:monospace">${sch>0?sch.toFixed(2):'—'}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;color:#94a3b8;font-family:monospace">${unh>0?unh.toFixed(2):'—'}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;font-family:monospace">${hrs.toFixed(2)}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-family:monospace">$${fmt(cost)}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-family:monospace;font-weight:700;color:${over?'#dc2626':'#1e40af'}">$${fmt(cumC2)}</td>
-    </tr>`;
-  }).join('');
-
-  const roleOrder=['TC','SC','BOTH','NONE'];
-  const roleLabel={'TC':'Testing Center','SC':'Scribe','BOTH':'Both Roles','NONE':'Unassigned'};
-  const roleColor={'TC':'#0284c7','SC':'#059669','BOTH':'#d97706','NONE':'#94a3b8'};
-  let wRows='';
-  roleOrder.forEach(role=>{
-    const ww=workers.filter(w=>(S.roles[w.name]||'NONE')===role);
-    if(!ww.length)return;
-    wRows+=`<tr><td colspan="4" style="padding:7px 14px;background:#f1f5f9;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${roleColor[role]};border-bottom:1px solid #e2e8f0">${roleLabel[role]}</td></tr>`;
-    ww.forEach((w,i)=>{
-      const history=workerMonthHistory(w.name);
-      const active=history.filter(h=>h.hours>0).length;
-      wRows+=`<tr style="background:${i%2===0?'#f8fafc':'#fff'}">
-        <td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;padding-left:22px">${w.name}</td>
-        <td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-family:monospace">${w.hours.toFixed(2)}</td>
-        <td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-family:monospace">$${fmt(w.hours*RATE)}</td>
-        <td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;text-align:right;color:#64748b;font-size:12px">${active} of ${S.months.length} periods</td>
-      </tr>`;
-    });
-  });
-
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>OARS Hours Report</title>
-  <style>*{box-sizing:border-box;}body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#1e293b;margin:0 auto;padding:36px 40px;max-width:1000px;}
-  h1{font-size:22px;color:#1e3a5f;margin:0 0 4px;}h2{font-size:13px;font-weight:700;color:#1e3a5f;margin:28px 0 12px;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #1e3a5f;padding-bottom:5px;}
-  table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:14px;}th{background:#1e3a5f;color:#fff;padding:10px 14px;text-align:left;font-size:12px;letter-spacing:.5px;}th.r{text-align:right;}
-  tfoot tr{background:#1e3a5f;}tfoot td{color:#fff;padding:10px 14px;font-weight:700;font-family:monospace;}tfoot td.r{text-align:right;}
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:4px;}.stat{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;}
-  .stat-lbl{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:5px;}.stat-val{font-size:20px;font-weight:700;color:#1e3a5f;font-family:monospace;}.stat-sub{font-size:12px;color:#94a3b8;margin-top:4px;}
-  .print-btn{position:fixed;top:20px;right:20px;background:#1e3a5f;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;}
-  @media print{.print-btn{display:none;}}</style>
-  </head><body>
-  <button class="print-btn" onclick="window.print()">🖨 Print / Save PDF</button>
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #1e3a5f;">
-    <div><h1>OARS Hours Tracker — Summary Report</h1><div style="color:#64748b;font-size:13px;margin-top:4px;">High Point University &nbsp;·&nbsp; Accessibility Resources &amp; Services</div></div>
-    <div style="text-align:right;font-size:12px;color:#94a3b8;line-height:1.9;"><div>Exported: ${exportDate}</div><div>Periods: ${n} of ~${TOTAL_PERIODS}</div><div>Rate: $10.00/hr</div></div>
-  </div>
-  <h2>Budget Status</h2>
-  <div style="margin-bottom:20px;">
-    <div style="display:flex;justify-content:space-between;font-size:13px;color:#64748b;margin-bottom:7px;">
-      <span>Spent: <strong style="color:#1e40af;font-family:monospace;">$${fmt(totC)}</strong></span>
-      <span>Annual Budget: <strong>$${budget.toLocaleString('en-US')}</strong></span>
-      <span style="color:${totC>budget?'#dc2626':totC/budget>=.75?'#d97706':'#059669'};font-weight:700">${pctUsed}% used &nbsp;·&nbsp; ${remaining!==null?(remaining<0?'Over by $'+fmt(Math.abs(remaining)):'$'+fmt(remaining)+' remaining'):''}
-      </span>
-    </div>
-    <div style="background:#e2e8f0;border-radius:6px;height:14px;overflow:hidden;"><div style="height:100%;width:${barPct}%;background:${barColor};border-radius:6px;"></div></div>
-  </div>
-  <h2>Annual Projection (${n} of ~${TOTAL_PERIODS} periods imported)</h2>
-  <div class="grid" style="grid-template-columns:repeat(4,1fr)">
-    <div class="stat"><div class="stat-lbl">Avg / Period</div><div class="stat-val">$${fmt(avg)}</div></div>
-    <div class="stat"><div class="stat-lbl">Projected Annual</div><div class="stat-val" style="color:${projected>budget?'#dc2626':'#059669'}">$${fmt(projected)}</div></div>
-    <div class="stat"><div class="stat-lbl">Budget Gap</div><div class="stat-val" style="color:${projected>budget?'#dc2626':'#059669'}">${projected>budget?'+':''} $${fmt(Math.abs(projected-budget))}</div></div>
-    <div class="stat"><div class="stat-lbl">TC / Scribe Split</div><div class="stat-val" style="font-size:14px">${totC>0?((tcH*RATE/totC)*100).toFixed(0)+'% / '+((scH*RATE/totC)*100).toFixed(0)+'%':'—'}</div></div>
-  </div>
-  <h2>Summary by Role</h2>
-  <div class="grid">
-    <div class="stat"><div class="stat-lbl">Testing Center</div><div class="stat-val" style="color:#0284c7">${tcH.toFixed(2)} hrs</div><div class="stat-sub">$${fmt(tcH*RATE)}</div></div>
-    <div class="stat"><div class="stat-lbl">Scribe</div><div class="stat-val" style="color:#059669">${scH.toFixed(2)} hrs</div><div class="stat-sub">$${fmt(scH*RATE)}</div></div>
-    <div class="stat"><div class="stat-lbl">Both Roles</div><div class="stat-val" style="color:#d97706">${btH.toFixed(2)} hrs</div><div class="stat-sub">Split not determinable</div></div>
-    <div class="stat"><div class="stat-lbl">Unassigned</div><div class="stat-val" style="color:#94a3b8">${unH.toFixed(2)} hrs</div><div class="stat-sub">$${fmt(unH*RATE)}</div></div>
-    <div class="stat"><div class="stat-lbl">Total Hours</div><div class="stat-val">${totH.toFixed(2)}</div><div class="stat-sub">$${fmt(totC)}</div></div>
-    <div class="stat"><div class="stat-lbl">% of Budget</div><div class="stat-val" style="color:${totC>budget?'#dc2626':totC/budget>=.75?'#d97706':'#059669'}">${pctUsed}%</div><div class="stat-sub">of $${budget.toLocaleString('en-US')}</div></div>
-  </div>
-  <h2>Monthly Running Total</h2>
-  <table><thead><tr><th>Period</th><th class="r" style="color:#7dd3fc">TC Hrs</th><th class="r" style="color:#6ee7b7">Scribe Hrs</th><th class="r">Unassigned</th><th class="r">Total Hrs</th><th class="r">Cost</th><th class="r">Cumul. Cost</th></tr></thead>
-  <tbody>${mRows}</tbody>
-  <tfoot><tr><td>TOTAL</td><td class="r">${tcH.toFixed(2)}</td><td class="r">${scH.toFixed(2)}</td><td class="r">${unH.toFixed(2)}</td><td class="r">${totH.toFixed(2)}</td><td class="r">$${fmt(totC)}</td><td class="r">$${fmt(totC)}</td></tr></tfoot></table>
-  <h2 style="margin-top:28px">Worker Detail by Role</h2>
-  <table><thead><tr><th>Worker</th><th class="r">Total Hours</th><th class="r">Total Cost</th><th class="r">Active Periods</th></tr></thead>
-  <tbody>${wRows}</tbody>
-  <tfoot><tr><td>TOTAL (${workers.length} workers)</td><td class="r">${totH.toFixed(2)}</td><td class="r">$${fmt(totC)}</td><td class="r"></td></tr></tfoot></table>
-  <div style="margin-top:32px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between;">
-    <span>OARS Hours Tracker · High Point University</span><span>Generated ${exportDate}</span>
-  </div></body></html>`;
-
-  const w=window.open('','_blank');
-  if(!w){showToast('⚠ Allow pop-ups to view report');return;}
-  w.document.write(html);w.document.close();
-  showToast('✓ Report opened');
-}
 
 // ── Year-End Report ────────────────────────────────────────────────────────
 function exportYearEnd(){
@@ -1146,8 +1023,8 @@ function exportYearEnd(){
   const n=S.months.length;
   const totH=workers.reduce((s,w)=>s+w.hours,0);
   const totC=totH*RATE;
-  const tcH=workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
-  const scH=workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+  const tcH=workers.filter(w=>(S.roles[w.name]||'NONE')==='TC').reduce((s,w)=>s+w.hours,0);
+  const scH=workers.filter(w=>(S.roles[w.name]||'NONE')==='SC').reduce((s,w)=>s+w.hours,0);
   const avg=totC/n;
   const projected=avg*TOTAL_PERIODS;
   const gap=projected-budget;
@@ -1235,8 +1112,8 @@ async function exportDocx(){
   const workers=allWorkers();
   const totH=workers.reduce((s,w)=>s+w.hours,0);
   const totC=totH*RATE;
-  const tcH=workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
-  const scH=workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+  const tcH=workers.filter(w=>(S.roles[w.name]||'NONE')==='TC').reduce((s,w)=>s+w.hours,0);
+  const scH=workers.filter(w=>(S.roles[w.name]||'NONE')==='SC').reduce((s,w)=>s+w.hours,0);
   const btH=workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
   const unH=workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
   const n=S.months.length;
@@ -1368,8 +1245,8 @@ async function exportDocx(){
   const mBodyRows=S.months.map((m,i)=>{
     const hrs=m.workers.reduce((s,w)=>s+w.hours,0);
     const cost=hrs*RATE;
-    const tch=m.workers.filter(w=>['TC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
-    const sch=m.workers.filter(w=>['SC','BOTH'].includes(S.roles[w.name]||'NONE')).reduce((s,w)=>s+w.hours,0);
+    const tch=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='TC').reduce((s,w)=>s+w.hours,0);
+    const sch=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='SC').reduce((s,w)=>s+w.hours,0);
     const unh=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
     cumH2+=hrs;cumC2+=cost;
     const over=budget>0&&cumC2>budget;
