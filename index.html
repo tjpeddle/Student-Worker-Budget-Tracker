@@ -539,10 +539,11 @@ function handleFile(e){
         }
       });
 
-      // Add/replace month — match on startDate+label to allow re-imports; new date = new entry
-      const label=document.getElementById('monthLabel').value;
-      const idx=S.months.findIndex(m=>m.label===label&&m.semester===S.currentSem&&m.startDate===startDate);
-      const entry={label,semester:S.currentSem,startDate,endDate,workers,importedAt:new Date().toISOString()};
+      // Add/replace month — use label captured at click time (ml), not re-read from dropdown
+      const label=ml;
+      const idx=S.months.findIndex(m=>m.label===label&&m.semester===sem2&&m.startDate===startDate);
+      const sem2=S.currentSem; // use semester as determined after auto-detection
+      const entry={label,semester:sem2,startDate,endDate,workers,importedAt:new Date().toISOString()};
       if(idx>=0)S.months[idx]=entry;else S.months.push(entry);
       S.months.sort((a,b)=>{
         // Sort by actual start date if available, else fall back to label order
