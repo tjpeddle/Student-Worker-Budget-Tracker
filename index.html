@@ -244,7 +244,7 @@ tfoot td.r{text-align:right;font-family:'Share Tech Mono',monospace;}
       </div>
     </div>
     <div class="field">
-      <label>Month <span style="font-size:11px;color:var(--text3)">(auto-detected)</span></label>
+      <label>Month &nbsp;<span id="monthHint" style="font-size:11px;color:var(--warn);font-weight:600"></span></label>
       <div class="sw">
         <select id="monthLabel">
           <option value="September">September</option>
@@ -493,21 +493,16 @@ function handleFile(e){
         endDate=toISO(String(dateCols[dateCols.length-1]));
         const fmt2=iso=>new Date(iso+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
         const suggestedMo=new Date(endDate+'T00:00:00').toLocaleString('en-US',{month:'long'});
-        document.getElementById('detectedRange').textContent=fmt2(startDate)+' – '+fmt2(endDate)+' ('+suggestedMo+')';
-        // Auto-suggest month from END date (most accurate for Workday exports)
-        // Use endDate since exports typically end in the reporting month
-        const moFromEnd=new Date(endDate+'T00:00:00').toLocaleString('en-US',{month:'long'});
+        document.getElementById('detectedRange').textContent=fmt2(startDate)+' – '+fmt2(endDate);
+        // Show suggestion hint next to dropdown label if it differs from current selection
         const sl=document.getElementById('monthLabel');
-        // Only auto-set if not already manually changed by user this session
-        if(!S._userPickedMonth){
-          if([...sl.options].some(o=>o.value===moFromEnd))sl.value=moFromEnd;
-          S.lastDetectedMonth=moFromEnd;
-        }
-        // Auto semester from end date
-        if(FALL_MONTHS.includes(moFromEnd)){setSem('Fall');S.currentSem='Fall';}
-        else if(SPRING_MONTHS.includes(moFromEnd)){setSem('Spring');S.currentSem='Spring';}
-        // Show both detected dates for reference
-        S._userPickedMonth=false; // reset after file load
+        const hint=document.getElementById('monthHint');
+        if(hint){hint.textContent=sl.value!==suggestedMo?'(file suggests: '+suggestedMo+')':'';}
+        // Suggest month from END date — shown as hint only, never overrides dropdown
+        const moSuggested=new Date(endDate+'T00:00:00').toLocaleString('en-US',{month:'long'});
+        // Auto semester from end date (semester toggle is fine to auto-set)
+        if(FALL_MONTHS.includes(moSuggested)){setSem('Fall');S.currentSem='Fall';}
+        else if(SPRING_MONTHS.includes(moSuggested)){setSem('Spring');S.currentSem='Spring';}
       }
 
       // Parse workers
@@ -1244,14 +1239,9 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 load();
 document.getElementById('budgetInput').value=S.budget||12000;
 document.getElementById('budgetInput').addEventListener('input',()=>{S.budget=parseFloat(document.getElementById('budgetInput').value)||0;renderBudget();renderProjection();save();});
-// Restore last used semester and month
+// Restore last used semester only — month dropdown stays where user left it
 if(S.currentSem)setSem(S.currentSem);
-if(S.lastDetectedMonth){
-  const slr=document.getElementById('monthLabel');
-  if([...slr.options].some(o=>o.value===S.lastDetectedMonth))slr.value=S.lastDetectedMonth;
-}
-// Flag when user manually picks a month so auto-detect won't override it
-document.getElementById('monthLabel').addEventListener('change',()=>{S._userPickedMonth=true;});
+
 render();
 </script>
 </body>
