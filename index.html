@@ -1231,35 +1231,36 @@ async function exportDocx(){
     const cost=hrs*RATE;
     const tch=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='TC').reduce((s,w)=>s+w.hours,0);
     const sch=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='SC').reduce((s,w)=>s+w.hours,0);
-    const unh=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
+    const bth=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
     cumH2+=hrs;cumC2+=cost;
     const over=budget>0&&cumC2>budget;
     const shade=i%2===0?'F1F5F9':null;
     const sd=m.startDate?new Date(m.startDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
     const ed=m.endDate?new Date(m.endDate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
     return trow(
-      tcell(m.label+(m.semester?' ('+m.semester+')':'')+'\n'+sd+' – '+ed,{width:1800,shade}),
-      tcell(tch>0?tch.toFixed(2):'—',{width:1100,shade,align:'right',color:'0284C7'}),
-      tcell(sch>0?sch.toFixed(2):'—',{width:1100,shade,align:'right',color:'059669'}),
-      tcell(unh>0?unh.toFixed(2):'—',{width:1100,shade,align:'right',color:'94A3B8'}),
-      tcell(hrs.toFixed(2),{width:1100,shade,align:'right',bold:true}),
-      tcell('$'+fmt(cost),{width:1280,shade,align:'right'}),
+      tcell(m.label+(m.semester?' ('+m.semester+')':'')+'\n'+sd+' – '+ed,{width:1600,shade}),
+      tcell(tch>0?tch.toFixed(2):'—',{width:980,shade,align:'right',color:'0284C7'}),
+      tcell(sch>0?sch.toFixed(2):'—',{width:980,shade,align:'right',color:'059669'}),
+      tcell(bth>0?bth.toFixed(2):'—',{width:980,shade,align:'right',color:'D97706'}),
+      tcell(hrs.toFixed(2),{width:980,shade,align:'right',bold:true}),
+      tcell('$'+fmt(cost),{width:1160,shade,align:'right'}),
       tcell('$'+fmt(cumC2),{width:1380,shade,align:'right',bold:true,color:over?'DC2626':'1E40AF'})
     );
   });
+  const btHdocx=workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
   const totRow=trow(
-    tcell('TOTAL — '+n+' periods',{width:1800,bold:true,shade:'E2E8F0'}),
-    tcell(tcH.toFixed(2),{width:1100,bold:true,shade:'E2E8F0',align:'right',color:'0284C7'}),
-    tcell(scH.toFixed(2),{width:1100,bold:true,shade:'E2E8F0',align:'right',color:'059669'}),
-    tcell(unH.toFixed(2),{width:1100,bold:true,shade:'E2E8F0',align:'right',color:'94A3B8'}),
-    tcell(totH.toFixed(2),{width:1100,bold:true,shade:'E2E8F0',align:'right'}),
-    tcell('$'+fmt(totC),{width:1280,bold:true,shade:'E2E8F0',align:'right'}),
+    tcell('TOTAL — '+n+' periods',{width:1600,bold:true,shade:'E2E8F0'}),
+    tcell(tcH.toFixed(2),{width:980,bold:true,shade:'E2E8F0',align:'right',color:'0284C7'}),
+    tcell(scH.toFixed(2),{width:980,bold:true,shade:'E2E8F0',align:'right',color:'059669'}),
+    tcell(btHdocx.toFixed(2),{width:980,bold:true,shade:'E2E8F0',align:'right',color:'D97706'}),
+    tcell(totH.toFixed(2),{width:980,bold:true,shade:'E2E8F0',align:'right'}),
+    tcell('$'+fmt(totC),{width:1160,bold:true,shade:'E2E8F0',align:'right'}),
     tcell('$'+fmt(totC),{width:1380,bold:true,shade:'E2E8F0',align:'right',color:totC>budget?'DC2626':'1E40AF'})
   );
   body+=table([
-    trow(hcell('Period',1800),hcell('TC Hrs',1100),hcell('Scribe Hrs',1100),hcell('Unassigned',1100),hcell('Total Hrs',1100),hcell('Cost',1280),hcell('Cumul. Cost',1380)),
+    trow(hcell('Period',1600),hcell('TC Hrs',980),hcell('Scribe Hrs',980),hcell('Combo Hrs',980),hcell('Total Hrs',980),hcell('Cost',1160),hcell('Cumul. Cost',1380)),
     ...mBodyRows,totRow
-  ],[1800,1100,1100,1100,1100,1280,1380]);
+  ],[1600,980,980,980,980,1160,1380]);
 
   // Worker detail
   body+=heading('Worker Detail by Role');
