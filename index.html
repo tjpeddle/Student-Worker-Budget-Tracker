@@ -237,6 +237,21 @@ tfoot td.r{text-align:right;font-family:'Share Tech Mono',monospace;}
   <div class="panel-title">Import Workday Export <span>EXCEL .xlsx</span></div>
   <div class="import-row">
     <div class="field">
+      <label>Academic Year</label>
+      <div class="sw">
+        <select id="yearSelect">
+          <option value="2023-24">2023-24</option>
+          <option value="2024-25">2024-25</option>
+          <option value="2025-26" selected>2025-26</option>
+          <option value="2026-27">2026-27</option>
+          <option value="2027-28">2027-28</option>
+          <option value="2028-29">2028-29</option>
+          <option value="2029-30">2029-30</option>
+          <option value="2030-31">2030-31</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
       <label>Semester</label>
       <div class="sem-toggle">
         <button class="sem-btn active" id="semF" onclick="setSem('Fall')">Fall</button>
@@ -268,6 +283,13 @@ tfoot td.r{text-align:right;font-family:'Share Tech Mono',monospace;}
     <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">⬆ Import Excel</button>
     <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFile(event)">
   </div>
+</div>
+
+<!-- Year View Toggle -->
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+  <div class="slbl" style="margin-bottom:0">Viewing:</div>
+  <div id="yearToggleWrap" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+  <button class="btn btn-ghost btn-sm" id="compBtn" style="display:none" onclick="exportComparison()">📈 Compare Years</button>
 </div>
 
 <!-- Unassigned alert -->
@@ -358,6 +380,7 @@ tfoot td.r{text-align:right;font-family:'Share Tech Mono',monospace;}
     <button class="btn btn-ghost btn-sm" onclick="document.getElementById('stateInput').click()">📂 Load State</button>
     <input type="file" id="stateInput" accept=".json" style="display:none" onchange="importState(event)">
     <button class="btn btn-ghost btn-sm" onclick="exportYearEnd()">📊 Year-End Report</button>
+    <button class="btn btn-ghost btn-sm" onclick="exportComparison()" id="compBtn2" style="display:none">📈 Comparison Report</button>
     <button class="btn btn-danger btn-sm" onclick="clearAll()">✕ Clear All</button>
   </div>
   <div class="tr-right">
@@ -416,12 +439,14 @@ const TOTAL_PERIODS = 8; // typical full year
 
 // ── State ──────────────────────────────────────────────────────────────────
 let S = {
-  months:[],      // [{label,semester,startDate,endDate,workers:[{name,hours,empType}],importedAt}]
-  roles:{},       // {name:'TC'|'SC'|'BOTH'|'NONE'}
-  newFlags:{},    // {name:true} — flagged as newly detected
+  years:{},         // {'2025-26':{months:[...]}, '2024-25':{months:[...]}}
+  roles:{},         // {name:'TC'|'SC'|'BOTH'|'NONE'} — global across all years
+  newFlags:{},
   budget:12000,
   prevSnapshot:null,
-  currentSem:'Fall'
+  currentSem:'Fall',
+  currentYear:'2025-26',
+  activeViewYear:'2025-26'
 };
 
 let _mw=null, _pr=null, _selMonth=null, _activeFilter='all';
@@ -447,7 +472,7 @@ function importState(e){
       const data=JSON.parse(ev.target.result);
       S={...S,...data};
       save();render();
-      showToast('✓ State loaded — '+S.months.length+' periods restored');
+      S.activeViewYear=S.currentYear||Object.keys(S.years||{})[0]||'2025-26';showToast('✓ State loaded — '+Object.keys(S.years||{}).length+' year(s) restored');
     }catch(err){showToast('⚠ Invalid state file');}
     e.target.value='';
   };
@@ -468,6 +493,7 @@ function handleFile(e){
   const file=e.target.files[0];if(!file)return;
   const ml=document.getElementById('monthLabel').value;
   const sem=S.currentSem;
+  const yr=document.getElementById('yearSelect').value;
   const reader=new FileReader();
   reader.onload=ev=>{
     try{
@@ -516,7 +542,7 @@ function handleFile(e){
       if(!workers.length){showToast('⚠ No worker rows found');e.target.value='';return;}
 
       // Snapshot prev
-      const allW=allWorkers();
+      const allW=allWorkers(yr);
       if(allW.length){const th=allW.reduce((s,w)=>s+w.hours,0);S.prevSnapshot={totalHrs:th,totalCost:th*RATE};}
 
       // Detect new names
@@ -529,24 +555,27 @@ function handleFile(e){
         }
       });
 
-      // Add/replace month — use label captured at click time (ml), not re-read from dropdown
+      // Add/replace month into correct year bucket
       const label=ml;
-      const idx=S.months.findIndex(m=>m.label===label&&m.semester===sem2&&m.startDate===startDate);
-      const sem2=S.currentSem; // use semester as determined after auto-detection
+      const sem2=S.currentSem;
+      if(!S.years[yr])S.years[yr]={months:[]};
+      const yMonths=S.years[yr].months;
+      const idx=yMonths.findIndex(m=>m.label===label&&m.semester===sem2&&m.startDate===startDate);
       const entry={label,semester:sem2,startDate,endDate,workers,importedAt:new Date().toISOString()};
-      if(idx>=0)S.months[idx]=entry;else S.months.push(entry);
-      S.months.sort((a,b)=>{
-        // Sort by actual start date if available, else fall back to label order
+      if(idx>=0)yMonths[idx]=entry;else yMonths.push(entry);
+      yMonths.sort((a,b)=>{
         if(a.startDate&&b.startDate)return a.startDate.localeCompare(b.startDate);
-        const order=['September','October','November','December','January','February','March','April','May','Custom'];
+        const order=['August','September','October','November','December','January','February','March','April','May','Custom'];
         return order.indexOf(a.label)-order.indexOf(b.label);
       });
+      S.activeViewYear=yr;
+      S.currentYear=yr;
 
-      // Always reset filter to 'all' after import so all workers show immediately
+      // Always reset filter to 'all' after import
       document.getElementById('roleFilter').value='all';
       _activeFilter='all';
-      save();render();
-      let msg=`✓ Imported ${workers.length} workers for ${label}`;
+      save();render();renderYearToggle();
+      let msg=`✓ Imported ${workers.length} workers for ${label} (${yr})`;
       if(newNames.length)msg+=` · ${newNames.length} new name${newNames.length>1?'s':''} detected`;
       showToast(msg);
     }catch(err){showToast('⚠ Error: '+err.message);console.error(err);}
@@ -556,10 +585,17 @@ function handleFile(e){
 }
 
 // ── Data helpers ───────────────────────────────────────────────────────────
-function allWorkers(){
-  // Aggregate all months, sum hours per worker
+function getYearMonths(yr){
+  return (S.years[yr||S.activeViewYear]||{months:[]}).months;
+}
+
+function allYears(){
+  return Object.keys(S.years).sort();
+}
+
+function allWorkers(yr){
   const map={};
-  S.months.forEach(m=>m.workers.forEach(w=>{
+  getYearMonths(yr).forEach(m=>m.workers.forEach(w=>{
     if(!map[w.name])map[w.name]={name:w.name,hours:0,empType:w.empType,periods:[]};
     map[w.name].hours+=w.hours;
     map[w.name].periods.push({label:m.label,semester:m.semester,hours:w.hours});
@@ -567,23 +603,53 @@ function allWorkers(){
   return Object.values(map);
 }
 
-function workerMonthHistory(name){
-  // Returns array of {label,semester,hours} for every imported period
-  return S.months.map(m=>{
+function workerMonthHistory(name,yr){
+  return getYearMonths(yr).map(m=>{
     const w=m.workers.find(x=>x.name===name);
     return {label:m.label,semester:m.semester,hours:w?w.hours:0};
   });
 }
 
-function semMonths(sem){return S.months.filter(m=>m.semester===sem);}
+function semMonths(sem,yr){
+  return getYearMonths(yr).filter(m=>m.semester===sem);
+}
 
-function semCost(sem){
-  return semMonths(sem).flatMap(m=>m.workers).reduce((s,w)=>s+w.hours,0)*RATE;
+function semCost(sem,yr){
+  return semMonths(sem,yr).flatMap(m=>m.workers).reduce((s,w)=>s+w.hours,0)*RATE;
 }
 
 function roleCost(role){
   return allWorkers().filter(w=>(S.roles[w.name]||'NONE')===role)
     .reduce((s,w)=>s+w.hours,0)*RATE;
+}
+
+// ── Year Toggle ────────────────────────────────────────────────────────────
+function renderYearToggle(){
+  const wrap=document.getElementById('yearToggleWrap');
+  if(!wrap)return;
+  const years=allYears();
+  const compBtn=document.getElementById('compBtn');
+  const compBtn2=document.getElementById('compBtn2');
+  if(compBtn)compBtn.style.display=years.length>=2?'inline-flex':'none';
+  if(compBtn2)compBtn2.style.display=years.length>=2?'inline-flex':'none';
+  if(!years.length){wrap.innerHTML='<span style="font-size:13px;color:var(--text3)">No data imported yet</span>';return;}
+  wrap.innerHTML=years.map(yr=>`
+    <button onclick="setViewYear('${yr}')" style="
+      padding:6px 16px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid;
+      transition:all .2s;font-family:'DM Sans',sans-serif;
+      background:${yr===S.activeViewYear?'var(--cyan)':'transparent'};
+      color:${yr===S.activeViewYear?'#060c14':'var(--text2)'};
+      border-color:${yr===S.activeViewYear?'var(--cyan)':'var(--border2)'};
+    ">${yr}</button>
+  `).join('');
+}
+
+function setViewYear(yr){
+  S.activeViewYear=yr;
+  // Sync year selector dropdown
+  const ys=document.getElementById('yearSelect');
+  if(ys&&[...ys.options].some(o=>o.value===yr))ys.value=yr;
+  save();render();renderYearToggle();
 }
 
 // ── Render ─────────────────────────────────────────────────────────────────
@@ -592,7 +658,7 @@ function render(){
 }
 
 function renderLib(){
-  const latest=[...S.months].sort((a,b)=>b.importedAt.localeCompare(a.importedAt))[0];
+  const latest=[...getYearMonths()].sort((a,b)=>b.importedAt.localeCompare(a.importedAt))[0];
   if(latest){
     const d=new Date(latest.importedAt);
     s('libDate',d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}));
@@ -611,7 +677,7 @@ function renderBudget(){
   const sprAlloc=budget-fallAlloc;
   const totCost=allWorkers().reduce((sum,w)=>sum+w.hours,0)*RATE;
   const fallCost=semCost('Fall');
-  const sprCost=semCost('Spring');
+  const sprCost=semCost('Spring');  // uses activeViewYear
 
   function updateBar(barId,pctId,remId,spentId,allocId,spent,alloc,spentEl,allocEl){
     const pct=alloc>0?(spent/alloc)*100:0;
@@ -644,7 +710,7 @@ function renderBudget(){
 }
 
 function renderProjection(){
-  const n=S.months.length;
+  const n=getYearMonths().length;
   s('projPeriods',String(n));
   if(!n){['projAvg','projAnn','projGap','projTC','projSC'].forEach(id=>s(id,'—'));return;}
   const totCost=allWorkers().reduce((sum,w)=>sum+w.hours,0)*RATE;
@@ -669,7 +735,7 @@ function renderProjection(){
 
 function renderCards(){
   const workers=allWorkers();
-  const n=S.months.length||1;
+  const n=getYearMonths().length||1;
   const totH=workers.reduce((s,w)=>s+w.hours,0);
   const tcH=workers.filter(w=>(S.roles[w.name]||'NONE')==='TC').reduce((s,w)=>s+w.hours,0);
   const scH=workers.filter(w=>(S.roles[w.name]||'NONE')==='SC').reduce((s,w)=>s+w.hours,0);
@@ -695,13 +761,14 @@ function renderCards(){
 function renderMonthly(){
   const el=document.getElementById('monthlyTable');
   const btn=document.getElementById('delMonthBtn');
-  if(!S.months.length){
-    el.innerHTML='<div class="empty"><div class="empty-icon">📅</div><p>No data yet. Import your first Workday export above.</p></div>';
+  const viewMonths=getYearMonths();
+  if(!viewMonths.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">📅</div><p>No data yet for '+S.activeViewYear+'. Select the year above and import a Workday export.</p></div>';
     btn.style.display='none';return;
   }
   const budget=S.budget;
   let cumH=0,cumC=0;
-  const rows=S.months.map((m,i)=>{
+  const rows=viewMonths.map((m,i)=>{
     const hrs=m.workers.reduce((s,w)=>s+w.hours,0);
     const cost=hrs*RATE;
     const tch=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='TC').reduce((s,w)=>s+w.hours,0);
@@ -733,7 +800,7 @@ function renderMonthly(){
     </tr>`;
   }).join('');
 
-  const totH2=S.months.flatMap(m=>m.workers).reduce((s,w)=>s+w.hours,0);
+  const totH2=viewMonths.flatMap(m=>m.workers).reduce((s,w)=>s+w.hours,0);
   const totC2=totH2*RATE;
   const over=budget>0&&totC2>budget;
 
@@ -750,7 +817,7 @@ function renderMonthly(){
     </tr></thead>
     <tbody>${rows}</tbody>
     <tfoot><tr>
-      <td>TOTAL — ${S.months.length} period${S.months.length!==1?'s':''}</td>
+      <td>TOTAL — ${viewMonths.length} period${viewMonths.length!==1?'s':''}</td>
       <td class="r" style="color:var(--cyan)">${allWorkers().filter(w=>(S.roles[w.name]||'NONE')==='TC').reduce((s,w)=>s+w.hours,0).toFixed(2)}</td>
       <td class="r" style="color:var(--green)">${allWorkers().filter(w=>(S.roles[w.name]||'NONE')==='SC').reduce((s,w)=>s+w.hours,0).toFixed(2)}</td>
       <td class="r" style="color:var(--warn)">${allWorkers().filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0).toFixed(2)}</td>
@@ -778,7 +845,7 @@ function renderWorkers(){
     return;
   }
   const maxH=Math.max(...filtered.map(w=>w.hours),1);
-  const n=S.months.length||1;
+  const n=getYearMonths().length||1;
   const rows=filtered.map(w=>{
     const role=S.roles[w.name]||'NONE';
     const isNew=S.newFlags[w.name];
@@ -787,7 +854,8 @@ function renderWorkers(){
     const pct=(w.hours/maxH)*100;
     const avg=w.hours/n;
     // Check if appeared in last import
-    const lastImport=S.months.length?S.months[S.months.length-1]:null;
+    const ym2=getYearMonths();
+    const lastImport=ym2.length?ym2[ym2.length-1]:null;
     const inLast=lastImport?lastImport.workers.some(x=>x.name===w.name):true;
     const inactiveCls=!inLast?'w-inactive':'';
     const newBadge=isNew?'<span class="new-badge">NEW</span>':'';
@@ -853,7 +921,7 @@ function positionTT(e){
 
 function showCardTT(e,type){
   const workers=allWorkers();
-  const n=S.months.length||1;
+  const n=getYearMonths().length||1;
   const tt=document.getElementById('tooltip');
   let html='';
 
@@ -928,7 +996,7 @@ function showWorkerTT(e,name){
     <div class="tt-row"><span>Role</span><span class="tt-val">${roleLabel}</span></div>
     <div class="tt-row"><span>Total Hours</span><span class="tt-val">${w.hours.toFixed(2)}</span></div>
     <div class="tt-row"><span>Total Cost</span><span class="tt-val">$${fmt(w.hours*RATE)}</span></div>
-    <div class="tt-row"><span>Active Periods</span><span class="tt-val">${n} of ${S.months.length}</span></div>
+    <div class="tt-row"><span>Active Periods</span><span class="tt-val">${n} of ${getYearMonths().length}</span></div>
     <div class="tt-row"><span>Avg (active)</span><span class="tt-val">${n>0?fmt(w.hours/n):0} hrs/mo</span></div>
     ${S.newFlags[name]?'<div class="tt-row"><span style="color:var(--danger)">⚠ Needs role assignment</span></div>':''}
     <div class="tt-divider"></div>
@@ -962,7 +1030,8 @@ function deleteMonth(){
   if(!_selMonth)return;
   const [sd,lb]=_selMonth.split('|');
   if(!confirm('Remove '+lb+' from tracker?'))return;
-  S.months=S.months.filter(m=>!(m.startDate===sd&&m.label===lb));
+  const yd=S.years[S.activeViewYear];
+  if(yd)yd.months=yd.months.filter(m=>!(m.startDate===sd&&m.label===lb));
   _selMonth=null;save();render();showToast('✓ Period removed');
 }
 
@@ -988,7 +1057,7 @@ function closeModal(e){if(e&&e.target!==document.getElementById('overlay'))retur
 // ── Clear ──────────────────────────────────────────────────────────────────
 function clearAll(){
   if(!confirm('Clear all data? Roles and assignments will also be cleared.'))return;
-  S={months:[],roles:{},newFlags:{},budget:S.budget,prevSnapshot:null,currentSem:'Fall'};
+  S={years:{},roles:{},newFlags:{},budget:S.budget,prevSnapshot:null,currentSem:'Fall',currentYear:'2025-26',activeViewYear:'2025-26'};
   _selMonth=null;save();render();showToast('✓ Cleared');
 }
 
@@ -1001,10 +1070,10 @@ function scrollToUnassigned(){
 
 // ── Year-End Report ────────────────────────────────────────────────────────
 function exportYearEnd(){
-  if(!S.months.length){showToast('⚠ No data to report');return;}
+  if(!getYearMonths().length){showToast('⚠ No data to report');return;}
   const budget=S.budget;
   const workers=allWorkers();
-  const n=S.months.length;
+  const n=getYearMonths().length;
   const totH=workers.reduce((s,w)=>s+w.hours,0);
   const totC=totH*RATE;
   const tcH=workers.filter(w=>(S.roles[w.name]||'NONE')==='TC').reduce((s,w)=>s+w.hours,0);
@@ -1086,9 +1155,128 @@ function exportYearEnd(){
   showToast('✓ Year-End Report opened');
 }
 
+
+// ── Comparison Report ───────────────────────────────────────────────────────
+async function exportComparison(){
+  const years=allYears();
+  if(years.length<2){showToast('⚠ Need at least 2 years of data');return;}
+  if(typeof JSZip==='undefined'){showToast('⚠ JSZip not loaded, try again');return;}
+  showToast('⏳ Building comparison report...');
+
+  const budget=S.budget;
+  const exportDate=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+
+  // Build per-year summary
+  function yearSummary(yr){
+    const workers=allWorkers(yr);
+    const months=getYearMonths(yr);
+    const totH=workers.reduce((s,w)=>s+w.hours,0);
+    const totC=totH*10;
+    const tcH=workers.filter(w=>(S.roles[w.name]||'NONE')==='TC').reduce((s,w)=>s+w.hours,0);
+    const scH=workers.filter(w=>(S.roles[w.name]||'NONE')==='SC').reduce((s,w)=>s+w.hours,0);
+    const btH=workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
+    const n=months.length;
+    return {yr,workers,months,totH,totC,tcH,scH,btH,n,avg:n>0?totC/n:0,projected:n>0?(totC/n)*8:0};
+  }
+
+  const summaries=years.map(yearSummary);
+
+  // ── Build HTML comparison report ──
+  const pctChg=(a,b)=>a>0?((b-a)/a*100).toFixed(1)+'%':'—';
+  const arrow=(a,b)=>b>a?'▲':'▼';
+  const color=(a,b,higher_is_bad=true)=>b>a?(higher_is_bad?'#dc2626':'#059669'):(higher_is_bad?'#059669':'#dc2626');
+
+  // Month-by-month comparison table
+  const allMonthLabels=[...new Set(summaries.flatMap(s=>s.months.map(m=>m.label)))];
+  const ORDER=['August','September','October','November','December','January','February','March','April','May'];
+  allMonthLabels.sort((a,b)=>ORDER.indexOf(a)-ORDER.indexOf(b));
+
+  const monthRows=allMonthLabels.map((lbl,i)=>{
+    const cells=summaries.map(s=>{
+      const m=s.months.find(x=>x.label===lbl);
+      if(!m)return '<td colspan="2" style="padding:9px 14px;border-bottom:1px solid #e2e8f0;text-align:center;color:#cbd5e1;font-size:12px">—</td>';
+      const hrs=m.workers.reduce((s,w)=>s+w.hours,0);
+      return `<td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-family:monospace">${hrs.toFixed(2)}</td>
+              <td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;text-align:right;font-family:monospace">$${fmt(hrs*10)}</td>`;
+    }).join('');
+    const bg=i%2===0?'#f8fafc':'#fff';
+    return `<tr style="background:${bg}"><td style="padding:9px 14px;border-bottom:1px solid #e2e8f0;font-weight:600">${lbl}</td>${cells}</tr>`;
+  }).join('');
+
+  const yearHeaders=summaries.map(s=>`<th colspan="2" class="r" style="text-align:center;background:#1e3a5f;color:#fff;padding:10px 14px">${s.yr}</th>`).join('<th style="background:#1e3a5f;color:#1e3a5f;width:20px"></th>');
+  const subHeaders=summaries.map(s=>`<th style="background:#2d5280;color:#fff;padding:8px 14px;text-align:right;font-size:11px">Hours</th><th style="background:#2d5280;color:#fff;padding:8px 14px;text-align:right;font-size:11px">Cost</th>`).join('<th style="background:#1e3a5f;width:20px"></th>');
+
+  // KPI comparison
+  const kpiRows=[
+    ['Total Hours', summaries.map(s=>s.totH.toFixed(2)), false],
+    ['Total Cost',  summaries.map(s=>'$'+fmt(s.totC)), true],
+    ['TC Hours',    summaries.map(s=>s.tcH.toFixed(2)), false],
+    ['Scribe Hours',summaries.map(s=>s.scH.toFixed(2)), false],
+    ['Combo Hours', summaries.map(s=>s.btH.toFixed(2)), false],
+    ['Avg/Period',  summaries.map(s=>'$'+fmt(s.avg)), true],
+    ['Projected Annual', summaries.map(s=>'$'+fmt(s.projected)), true],
+    ['Periods Imported', summaries.map(s=>String(s.n)), false],
+    ['Workers',     summaries.map(s=>String(s.workers.length)), false],
+  ].map(([ label, vals, higherBad ],i)=>{
+    const bg=i%2===0?'#f8fafc':'#fff';
+    const valCells=vals.map(v=>`<td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:center;font-family:monospace;font-weight:600">${v}</td>`).join('');
+    // Change indicator between first two years
+    let chgCell='';
+    if(summaries.length>=2){
+      const a=parseFloat(String(vals[0]).replace(/[$,]/g,''));
+      const b=parseFloat(String(vals[1]).replace(/[$,]/g,''));
+      if(!isNaN(a)&&!isNaN(b)&&a>0){
+        const pct=((b-a)/a*100).toFixed(1);
+        const clr=b>a?(higherBad?'#dc2626':'#059669'):(higherBad?'#059669':'#dc2626');
+        chgCell=`<td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:center;color:${clr};font-weight:700">${b>a?'▲':'▼'} ${Math.abs(pct)}%</td>`;
+      } else { chgCell='<td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;text-align:center;color:#94a3b8">—</td>'; }
+    }
+    return `<tr style="background:${bg}"><td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-weight:600">${label}</td>${valCells}${chgCell}</tr>`;
+  }).join('');
+
+  const kpiHeaders=summaries.map(s=>`<th style="text-align:center;background:#1e3a5f;color:#fff;padding:10px 14px">${s.yr}</th>`).join('');
+  const chgHeader=summaries.length>=2?`<th style="text-align:center;background:#1e3a5f;color:#fff;padding:10px 14px">Change</th>`:'';
+
+  // Narrative
+  const s0=summaries[0], s1=summaries[1]||s0;
+  const costChg=s0.totC>0?((s1.totC-s0.totC)/s0.totC*100).toFixed(1):0;
+  const narrative=`Comparing ${years.join(' and ')}: Total spend ${s1.totC>s0.totC?'increased':'decreased'} by ${Math.abs(costChg)}% from $${fmt(s0.totC)} to $${fmt(s1.totC)}. Testing Center hours ${s1.tcH>s0.tcH?'grew':'decreased'} from ${s0.tcH.toFixed(1)} to ${s1.tcH.toFixed(1)} hours, while Scribe hours ${s1.scH>s0.scH?'increased':'decreased'} from ${s0.scH.toFixed(1)} to ${s1.scH.toFixed(1)} hours. The projected annual cost at the ${years[years.length-1]} pace is $${fmt(summaries[summaries.length-1].projected)}, ${summaries[summaries.length-1].projected>budget?'exceeding':'within'} the $${fmt(budget)} annual budget by ${summaries[summaries.length-1].projected>budget?'$'+fmt(summaries[summaries.length-1].projected-budget):'$'+fmt(budget-summaries[summaries.length-1].projected)}.`;
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>OARS Year-Over-Year Comparison</title>
+  <style>*{box-sizing:border-box;}body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#1e293b;margin:0 auto;padding:36px 40px;max-width:1080px;}
+  h1{font-size:24px;color:#1e3a5f;margin:0 0 4px;}h2{font-size:13px;font-weight:700;color:#1e3a5f;margin:28px 0 12px;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #1e3a5f;padding-bottom:5px;}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:6px;}th{background:#1e3a5f;color:#fff;padding:10px 14px;text-align:left;font-size:12px;}
+  .narrative{background:#f0f9ff;border-left:4px solid #0284c7;padding:16px 20px;font-size:14px;line-height:1.7;border-radius:0 8px 8px 0;margin-bottom:8px;}
+  .print-btn{position:fixed;top:20px;right:20px;background:#1e3a5f;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;}
+  @media print{.print-btn{display:none;}}</style>
+  </head><body>
+  <button class="print-btn" onclick="window.print()">🖨 Print / Save PDF</button>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #1e3a5f;">
+    <div><h1>OARS Year-Over-Year Comparison</h1><div style="color:#64748b;font-size:13px;margin-top:4px;">High Point University · Office of Accessibility Resources and Services</div></div>
+    <div style="text-align:right;font-size:12px;color:#94a3b8;line-height:2;"><div>${exportDate}</div><div>Comparing: ${years.join(' vs ')}</div></div>
+  </div>
+  <h2>Summary</h2>
+  <div class="narrative">${narrative}</div>
+  <h2>Key Metrics — Side by Side</h2>
+  <table><thead><tr><th>Metric</th>${kpiHeaders}${chgHeader}</tr></thead><tbody>${kpiRows}</tbody></table>
+  <h2>Month-by-Month Hours &amp; Cost</h2>
+  <table><thead>
+    <tr><th rowspan="2">Month</th>${yearHeaders}</tr>
+    <tr>${subHeaders}</tr>
+  </thead><tbody>${monthRows}</tbody></table>
+  <div style="margin-top:32px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between;">
+    <span>OARS Hours Tracker · High Point University</span><span>Generated ${exportDate}</span>
+  </div></body></html>`;
+
+  const w=window.open('','_blank');
+  if(!w){showToast('⚠ Allow pop-ups to view report');return;}
+  w.document.write(html);w.document.close();
+  showToast('✓ Comparison report opened');
+}
+
 // ── Export Word Doc (docx via JSZip + raw XML) ────────────────────────────
 async function exportDocx(){
-  if(!S.months.length){showToast('⚠ Nothing to export');return;}
+  if(!getYearMonths().length){showToast('⚠ Nothing to export');return;}
   if(typeof JSZip==='undefined'){showToast('⚠ JSZip not loaded yet, try again');return;}
   showToast('⏳ Building Word doc...');
 
@@ -1100,7 +1288,7 @@ async function exportDocx(){
   const scH=workers.filter(w=>(S.roles[w.name]||'NONE')==='SC').reduce((s,w)=>s+w.hours,0);
   const btH=workers.filter(w=>(S.roles[w.name]||'NONE')==='BOTH').reduce((s,w)=>s+w.hours,0);
   const unH=workers.filter(w=>(S.roles[w.name]||'NONE')==='NONE').reduce((s,w)=>s+w.hours,0);
-  const n=S.months.length;
+  const n=getYearMonths().length;
   const avg=totC/n;
   const projected=avg*TOTAL_PERIODS;
   const gap=projected-budget;
@@ -1226,7 +1414,7 @@ async function exportDocx(){
   // Monthly table
   body+=heading('Monthly Running Total');
   let cumH2=0,cumC2=0;
-  const mBodyRows=S.months.map((m,i)=>{
+  const mBodyRows=getYearMonths().map((m,i)=>{
     const hrs=m.workers.reduce((s,w)=>s+w.hours,0);
     const cost=hrs*RATE;
     const tch=m.workers.filter(w=>(S.roles[w.name]||'NONE')==='TC').reduce((s,w)=>s+w.hours,0);
@@ -1389,6 +1577,9 @@ document.getElementById('budgetInput').value=S.budget||12000;
 document.getElementById('budgetInput').addEventListener('input',()=>{S.budget=parseFloat(document.getElementById('budgetInput').value)||0;renderBudget();renderProjection();save();});
 // Restore last used semester only — month dropdown stays where user left it
 if(S.currentSem)setSem(S.currentSem);
+if(S.currentYear){const ys=document.getElementById('yearSelect');if(ys&&[...ys.options].some(o=>o.value===S.currentYear))ys.value=S.currentYear;}
+if(!S.activeViewYear)S.activeViewYear=S.currentYear||'2025-26';
+renderYearToggle();
 
 render();
 </script>
